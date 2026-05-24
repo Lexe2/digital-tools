@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Blog Engine — AI Content Generator</title>
+<style>
+  :root { --bg: #fafbfc; --surface: #fff; --border: #dde1e6; --text: #1a1d23; --text-secondary: #5f6570; --text-muted: #8b929e; --accent: #2563eb; --green: #16a34a; --amber: #d97706; --radius: 8px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 1200px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 18px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+  header h1 { font-size: 1.4rem; font-weight: 700; } header h1 span { color: var(--accent); }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
+  .controls input, .controls select { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.86rem; }
+  .controls input { flex: 1; min-width: 200px; }
+  .btn { padding: 8px 16px; border-radius: 6px; font-size: 0.84rem; font-weight: 600; cursor: pointer; border: none; }
+  .btn-primary { background: var(--accent); color: #fff; } .btn-primary:hover { background: #1d4ed8; }
+  .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); } .btn-outline:hover { background: #f5f6f8; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .stats { display: flex; gap: 12px; margin-bottom: 16px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; text-align: center; min-width: 80px; }
+  .stat .num { font-size: 1.4rem; font-weight: 700; }
+  .stat .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.84rem; }
+  .panel-body { padding: 12px; max-height: 480px; overflow-y: auto; }
+
+  .kw-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f0f1f3; }
+  .kw-row .name { font-weight: 600; font-size: 0.82rem; }
+  .kw-row .meta { font-size: 0.7rem; color: var(--text-muted); }
+  .kw-status { font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 100px; }
+  .kw-done { background: #dcfce7; color: var(--green); }
+  .kw-running { background: #dbeafe; color: var(--accent); animation: pulse 1.5s infinite; }
+  .kw-pending { background: #f0f1f3; color: var(--text-muted); }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+  .post-card { background: #f8f9fb; border: 1px solid #e8eaef; border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+  .post-card h4 { font-size: 0.9rem; color: var(--accent); margin-bottom: 4px; }
+  .post-card .meta { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px; }
+  .post-card .body { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.55; white-space: pre-wrap; max-height: 180px; overflow-y: auto; }
+  .post-card .tags { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .post-card .tag { font-size: 0.64rem; background: #e8eaef; padding: 2px 7px; border-radius: 100px; color: var(--text-muted); }
+
+  .empty { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.82rem; }
+  @media (max-width: 768px) { .split { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>SEO <span>Blog Engine</span></h1>
+  <div style="display:flex;gap:6px;">
+    <button class="btn btn-outline" onclick="exportAll()">⬇ Export All</button>
+    <button class="btn btn-outline" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<div class="controls">
+  <input type="text" id="kwInput" placeholder="Enter keywords separated by commas (e.g., saas onboarding, cold email tips)">
+  <select id="templateSelect"><option value="howto">How-To Guide</option><option value="listicle">Listicle</option><option value="comparison">Comparison Post</option><option value="guide">Ultimate Guide</option><option value="casestudy">Case Study</option></select>
+  <select id="toneSelect"><option value="professional">Professional</option><option value="conversational">Conversational</option><option value="technical">Technical</option></select>
+  <button class="btn btn-primary" onclick="addKeywords()">Add Keywords</button>
+  <button class="btn btn-primary" id="genAllBtn" onclick="generateAll()">▶ Generate All</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="sTotal">0</div><div class="label">Keywords</div></div>
+  <div class="stat"><div class="num" id="sDone" style="color:var(--green);">0</div><div class="label">Generated</div></div>
+  <div class="stat"><div class="num" id="sPending">0</div><div class="label">Pending</div></div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-header">📋 Keywords</div>
+    <div class="panel-body" id="kwList"><div class="empty">Add keywords above to get started.</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">📝 Generated Content <span id="genStatus" style="font-size:0.7rem;color:var(--text-muted);margin-left:8px;"></span></div>
+    <div class="panel-body" id="resultList"><div class="empty">Generated posts will appear here.</div></div>
+  </div>
+</div>
+
+<script>
+// ── Content Engine ──
+const templates = {
+  howto: {
+    titles: ['How to {kw}', 'A Complete Guide to {kw}', 'The Step-by-Step Guide to {kw}'],
+    intro: (kw) => `Most people struggle with ${kw}. They spend hours reading conflicting advice and never feel confident they're doing it right. This guide changes that. Here's exactly what works.`,
+    sections: ['The Problem', 'What Most People Get Wrong', 'The Solution Step by Step', 'Mistakes to Avoid', 'Next Steps'],
+    body: (section, kw) => {
+      const m = {
+        'The Problem': `Let's be honest: most advice about ${kw} is useless. Written by people who've never actually done it. The result? You waste time, get frustrated, and wonder if ${kw} is even worth it.`,
+        'What Most People Get Wrong': `1. They skip fundamentals and chase advanced tactics. 2. They copy competitors without understanding why. 3. They give up too early — results compound over time. 4. They measure the wrong metrics.`,
+        'The Solution Step by Step': `Step 1: Define success. Be specific. Step 2: Audit your current situation. Step 3: Pick ONE thing to fix. Step 4: Track results for 30 days. Step 5: Keep what works, discard what doesn't.`,
+        'Mistakes to Avoid': `Analysis paralysis. Scope creep. Perfectionism — ship at 80%. Working in isolation — talk to people who've done this.`,
+        'Next Steps': `Start today. Pick one strategy, implement it this week, and measure the result. The best learning comes from action, not more reading.`,
+      };
+      return m[section] || `Key insight about ${kw} and ${section.toLowerCase()}: consistency beats intensity. Small improvements compound.`;
+    },
+  },
+  listicle: {
+    titles: ['7 {kw} That Actually Work', '10 {kw} Experts Swear By', '12 {kw} for Better Results'],
+    intro: (kw) => `I tested dozens of approaches to ${kw}. Most failed. These are the ones that actually delivered results — no fluff, no theory.`,
+    sections: ['Strategy 1', 'Strategy 2', 'Strategy 3', 'Strategy 4', 'Strategy 5'],
+    body: (section, kw) => `This strategy works because it focuses on ${kw} fundamentals. Most people overcomplicate this. Start with the basics, measure the outcome, and iterate. The key insight: ${kw} rewards consistency over intensity.`,
+  },
+  comparison: {
+    titles: ['{kw}: Complete Comparison', '{kw} Showdown: Which is Best?', '{kw}: An Honest Review'],
+    intro: (kw) => `Choosing the right option for ${kw} is confusing. Every vendor claims they're the best. I tested them myself. Here's the honest comparison.`,
+    sections: ['Quick Verdict', 'Detailed Comparison', 'Pricing', 'Who Should Use Each', 'Bottom Line'],
+    body: (section, kw) => `After testing the top options for ${kw}, the honest truth: there is no universal winner. Best overall depends on your specific use case. Best for beginners: start with the simplest option. Best for teams: look for collaboration features.`,
+  },
+  guide: {
+    titles: ['The Ultimate Guide to {kw}', 'Mastering {kw}', '{kw}: From Beginner to Pro'],
+    intro: (kw) => `This is the guide I wish I had when I started with ${kw}. Everything from fundamentals to advanced tactics — all in one place. Bookmark this.`,
+    sections: ['What It Is', 'Why It Matters', 'Core Concepts', 'Implementation', 'Optimization', 'Measuring Results'],
+    body: (s, kw) => `Understanding ${kw} requires focusing on the fundamentals first. Most people skip this and pay for it later. The core concept: ${kw} is about outcomes, not activity. Measure results, not effort.`,
+  },
+  casestudy: {
+    titles: ['How I Used {kw} to Get Results', 'Case Study: {kw} in Practice', '{kw}: Real Numbers'],
+    intro: (kw) => `Here's exactly what happened when I applied ${kw} in a real scenario. Numbers included. No theory — just what worked.`,
+    sections: ['The Starting Point', 'What I Tried', 'What Actually Worked', 'The Numbers', 'Key Lessons'],
+    body: (s, kw) => `When I started with ${kw}, results were unpredictable. After 30 days of consistent implementation, things changed. The numbers: before and after data shows clear improvement. Key lesson: ${kw} rewards those who stick with it.`,
+  },
+};
+
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+function generatePost(kw, template, tone) {
+  const t = templates[template];
+  const title = pick(t.titles).replace('{kw}', kw.charAt(0).toUpperCase() + kw.slice(1));
+  const meta = `Looking for ${kw} strategies that work in ${new Date().getFullYear()}? This guide covers proven techniques and actionable steps.`;
+
+  let body = t.intro(kw) + '\n\n';
+  for (const section of t.sections) {
+    body += `## ${section}\n\n${t.body(section, kw)}\n\n`;
+  }
+
+  const faqs = [
+    { q: `What is ${kw}?`, a: `${kw.charAt(0).toUpperCase() + kw.slice(1)} is a process that helps improve outcomes when applied consistently.` },
+    { q: `How long to see results?`, a: `Most people see initial results within 2-4 weeks of consistent implementation.` },
+    { q: `What's the biggest mistake?`, a: `Overcomplicating it. Start simple, measure results, iterate.` },
+  ];
+
+  return { keyword: kw, title, metaDescription: meta, body, faqs, tags: [kw, template, tone], template, tone, generated: new Date().toISOString() };
+}
+
+// ── State ──
+let keywords = [];
+let results = {};
+let generating = false;
+
+function addKeywords() {
+  const raw = document.getElementById('kwInput').value.split(',').map(k => k.trim()).filter(Boolean);
+  if (!raw.length) return;
+  const template = document.getElementById('templateSelect').value;
+  const tone = document.getElementById('toneSelect').value;
+  for (const kw of raw) {
+    if (!keywords.find(k => k.kw === kw)) {
+      keywords.push({ kw, template, tone, status: 'pending' });
+    }
+  }
+  document.getElementById('kwInput').value = '';
+  renderAll();
+}
+
+function renderAll() {
+  renderKeywords();
+  renderResults();
+  updateStats();
+}
+
+function renderKeywords() {
+  const el = document.getElementById('kwList');
+  if (!keywords.length) { el.innerHTML = '<div class="empty">Add keywords above to get started.</div>'; return; }
+  el.innerHTML = keywords.map((k, i) => `
+    <div class="kw-row">
+      <div><span class="name">${esc(k.kw)}</span> <span class="meta">${k.template}</span></div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="kw-status kw-${k.status}">${k.status}</span>
+        <button onclick="removeKw(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderResults() {
+  const el = document.getElementById('resultList');
+  const list = Object.entries(results);
+  if (!list.length) { el.innerHTML = '<div class="empty">Generated posts will appear here.</div>'; return; }
+  el.innerHTML = list.map(([kw, post]) => `
+    <div class="post-card">
+      <h4>${esc(post.title)}</h4>
+      <div class="meta">${esc(post.metaDescription)} | ${post.template} | ${new Date(post.generated).toLocaleDateString()}</div>
+      <div class="body">${esc(post.body.substring(0, 600))}${post.body.length > 600 ? '\n\n... (full content in export)' : ''}</div>
+      <div class="tags">${post.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+      ${post.faqs ? `<details style="margin-top:4px;font-size:0.72rem;"><summary>${post.faqs.length} FAQs</summary>${post.faqs.map(f => `<p><strong>Q: ${esc(f.q)}</strong><br>A: ${esc(f.a)}</p>`).join('')}</details>` : ''}
+    </div>
+  `).join('');
+}
+
+function updateStats() {
+  const done = keywords.filter(k => k.status === 'done').length;
+  const pending = keywords.filter(k => k.status === 'pending').length;
+  document.getElementById('sTotal').textContent = keywords.length;
+  document.getElementById('sDone').textContent = done;
+  document.getElementById('sPending').textContent = pending;
+  document.getElementById('genStatus').textContent = done === keywords.length && keywords.length ? '✓ All complete' : '';
+}
+
+function removeKw(i) {
+  const kw = keywords[i].kw;
+  keywords.splice(i, 1);
+  delete results[kw];
+  renderAll();
+}
+
+async function generateAll() {
+  if (generating) return;
+  generating = true;
+  const btn = document.getElementById('genAllBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+
+  for (let i = 0; i < keywords.length; i++) {
+    if (keywords[i].status === 'pending') {
+      keywords[i].status = 'running';
+      renderAll();
+      await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
+      results[keywords[i].kw] = generatePost(keywords[i].kw, keywords[i].template, keywords[i].tone);
+      keywords[i].status = 'done';
+      renderAll();
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '▶ Generate All';
+  generating = false;
+}
+
+function exportAll() {
+  const list = Object.entries(results);
+  if (!list.length) return alert('Generate some posts first.');
+  let md = `# SEO Blog Engine — Export\nGenerated: ${new Date().toLocaleString()}\n\n---\n\n`;
+  for (const [kw, post] of list) {
+    md += `# ${post.title}\n\n> ${post.metaDescription}\n\n**Tags:** ${post.tags.join(', ')}\n\n${post.body}\n\n`;
+    if (post.faqs) { md += `## FAQ\n\n`; for (const f of post.faqs) md += `**Q: ${f.q}**\n${f.a}\n\n`; }
+    md += `---\n\n`;
+  }
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `seo-posts-${new Date().toISOString().slice(0,10)}.md`; a.click();
+}
+
+function resetAll() {
+  if (!confirm('Clear all?')) return;
+  keywords = []; results = {};
+  renderAll();
+}
+
+function esc(s) { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; }
+
+// Load demo
+keywords = [
+  { kw: 'saas onboarding tips', template: 'listicle', tone: 'professional', status: 'pending' },
+  { kw: 'cold email deliverability', template: 'howto', tone: 'conversational', status: 'pending' },
+  { kw: 'freelancer invoicing tools', template: 'comparison', tone: 'professional', status: 'pending' },
+  { kw: 'soc2 compliance checklist', template: 'guide', tone: 'technical', status: 'pending' },
+];
+renderAll();
+console.log('SEO Blog Engine loaded. ' + keywords.length + ' keywords ready. Click Generate All to test.');
+</script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Chaser — Automated Payment Follow-Up</title>
+<style>
+  :root {
+    --bg: #fafbfc; --surface: #fff; --border: #dde1e8;
+    --text: #1a1d26; --text-secondary: #5c6578; --text-muted: #8b93a5;
+    --accent: #7c3aed; --accent-hover: #6d28d9; --green: #059669; --amber: #d97706; --red: #dc2626;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 960px; margin: 0 auto; }
+
+  header { text-align: center; padding: 32px 0 20px; }
+  header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); margin-top: 4px; font-size: 0.95rem; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+  .panel-body { padding: 14px; }
+
+  .invoice-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #f0f1f3; font-size: 0.84rem;
+  }
+  .invoice-row .client { font-weight: 600; }
+  .invoice-row .amount { font-family: 'SF Mono', monospace; }
+  .invoice-row .days { font-size: 0.72rem; padding: 2px 8px; border-radius: 100px; font-weight: 600; }
+  .days-overdue { background: #fef2f2; color: var(--red); }
+  .days-due { background: #fffbeb; color: var(--amber); }
+  .days-paid { background: #f0fdf4; color: var(--green); }
+
+  .btn { padding: 8px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; }
+  .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f5f6f9; }
+  .btn-ghost { background: none; border: none; color: var(--accent); cursor: pointer; font-weight: 600; font-size: 0.82rem; }
+
+  .email-preview {
+    background: #f8f9fc; border: 1px solid #e8eaef; border-radius: 6px; padding: 16px;
+    font-size: 0.82rem; margin-top: 10px; white-space: pre-wrap; max-height: 250px; overflow-y: auto;
+    line-height: 1.6;
+  }
+  .email-preview .subject { font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .email-preview .body { color: var(--text-secondary); }
+
+  .sequence { display: flex; gap: 4px; margin-bottom: 16px; }
+  .seq-step {
+    flex: 1; padding: 10px; border-radius: 6px; text-align: center; font-size: 0.72rem;
+    border: 1px solid var(--border); cursor: pointer; transition: all 0.12s;
+  }
+  .seq-step.active { border-color: var(--accent); background: rgba(124,58,237,0.06); }
+  .seq-step:hover { border-color: var(--accent); }
+  .seq-step .seq-day { font-weight: 700; font-size: 1rem; color: var(--accent); }
+  .seq-step .seq-label { color: var(--text-muted); margin-top: 2px; }
+
+  .stats-mini { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; text-align: center; min-width: 80px; }
+  .stat-mini .num { font-size: 1.4rem; font-weight: 700; }
+  .stat-mini .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .form-row { display: flex; gap: 10px; margin-bottom: 8px; }
+  .form-row input, .form-row textarea { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.84rem; font-family: inherit; }
+  .form-row input:focus, .form-row textarea:focus { outline: none; border-color: var(--accent); }
+
+  .upgrade-banner {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6); color: #fff;
+    padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 16px;
+  }
+  .upgrade-banner h3 { margin-bottom: 6px; }
+  .upgrade-banner p { font-size: 0.85rem; opacity: 0.9; margin-bottom: 12px; }
+  .btn-white { background: #fff; color: var(--accent); padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>Invoice<span>Chaser</span></h1>
+  <p>Automated payment follow-up. Stop losing money to unpaid invoices because you're uncomfortable chasing.</p>
+</header>
+
+<div class="stats-mini">
+  <div class="stat-mini"><div class="num" style="color:var(--red);">3</div><div class="label">Overdue</div></div>
+  <div class="stat-mini"><div class="num" style="color:var(--amber);">2</div><div class="label">Due Soon</div></div>
+  <div class="stat-mini"><div class="num" style="color:var(--green);">7</div><div class="label">Paid</div></div>
+  <div class="stat-mini"><div class="num" style="color:var(--accent);">$4,250</div><div class="label">At Risk</div></div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-header"><span>📋 Outstanding Invoices</span><button class="btn btn-outline btn-sm" onclick="addDemoInvoice()">+ Add</button></div>
+    <div class="panel-body" id="invoiceList" style="max-height:400px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><span>📧 Follow-Up Sequence</span><span style="font-size:0.7rem;color:var(--text-muted);">Click an invoice to preview</span></div>
+    <div class="panel-body">
+      <div class="sequence" id="sequence"></div>
+      <div class="email-preview" id="emailPreview">
+        <div class="subject">Select an invoice above to preview the follow-up email</div>
+        <div class="body">The email will be customized with the client name, invoice number, and amount.</div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="sendEmail()">📤 Send Email (Simulated)</button>
+        <button class="btn btn-outline btn-sm" onclick="copyEmail()">📋 Copy to Clipboard</button>
+        <button class="btn btn-ghost btn-sm" onclick="markAsPaid()">✓ Mark Paid</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="upgrade-banner">
+  <h3>Pro: Auto-Send + Payment Integration</h3>
+  <p>Pro connects to your email (Gmail/Outlook) and automatically sends follow-ups on schedule. Integrates with Stripe to auto-detect payments and stop chasing. $39 one-time.</p>
+  <button class="btn-white" onclick="alert('Pro version: $39 one-time. Auto-send emails on schedule, Stripe integration, payment detection, and late fee auto-calculation.')">Get Pro — $39</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──
+let invoices = [];
+let selectedInvoice = null;
+let selectedSequence = 0;
+
+const sequences = [
+  { day: 3, tone: 'gentle', label: 'Gentle Reminder', subject: 'Quick reminder — Invoice {num}' },
+  { day: 10, tone: 'direct', label: 'Follow-Up', subject: 'Following up — Invoice {num}' },
+  { day: 20, tone: 'firm', label: 'Urgent', subject: 'Payment overdue — Invoice {num} ({days} days)' },
+  { day: 30, tone: 'final', label: 'Final Notice', subject: 'FINAL NOTICE — Invoice {num} — 30 days overdue' },
+];
+
+const templates = {
+  gentle: (inv) => `Hi {client},\n\nJust a friendly reminder that invoice {num} for {amount} is due in {days} days.\n\nNo rush at all — just wanted to make sure it didn't slip through the cracks. Let me know if you need anything from my end.\n\nThanks!\n{me}`,
+  direct: (inv) => `Hi {client},\n\nFollowing up on invoice {num} ({amount}), which was due on {due}. It's now {days} days past due.\n\nCould you let me know when we can expect payment? Happy to discuss if there are any issues on your end.\n\nBest,\n{me}`,
+  firm: (inv) => `Hi {client},\n\nI'm reaching out regarding invoice {num} for {amount}, which is now {days} days past the due date of {due}.\n\nI need to receive payment by {deadline} to avoid any service interruption. If payment has already been made, please disregard this message and accept my thanks.\n\nPlease respond with an ETA for payment.\n\n{me}`,
+  final: (inv) => `{client},\n\nThis is my final notice regarding invoice {num} for {amount}, which is now {days} days overdue (due {due}).\n\nIf payment is not received within 7 days, I will need to escalate this matter. I'd much rather resolve this directly with you.\n\nPayment link: <link>\nAmount due: {amount}\nInvoice: {num}\n\nPlease contact me immediately if there are any issues.\n\n{me}`,
+};
+
+// ── Demo data ──
+const demoInvoices = [
+  { id: 1, client: 'TechStartup Inc.', num: 'INV-2026-0042', amount: '$3,200.00', due: '2026-04-15', paid: false },
+  { id: 2, client: 'GreenLeaf Organics', num: 'SM-2026-0112', amount: '$12,600.00', due: '2026-05-01', paid: false },
+  { id: 3, client: 'DataFlow Analytics', num: 'INV-2026-0482', amount: '$13,856.00', due: '2026-05-14', paid: false },
+  { id: 4, client: 'CloudPeak SaaS', num: '2A3B-4C5D', amount: '$786.55', due: '2026-05-20', paid: false },
+  { id: 5, client: 'NexGen Bio', num: 'INV-2026-0512', amount: '$4,500.00', due: '2026-06-01', paid: false },
+];
+
+invoices = [...demoInvoices.map(i => ({...i, id: i.id + 10}))]; // Fresh copies
+invoices[0].paid = true;
+invoices[1].paid = true;
+invoices[2].paid = true;
+invoices[3].paid = true;
+invoices[4].paid = true;
+// Reset demo
+invoices = [...demoInvoices];
+invoices[0].paid = true;
+invoices[1].paid = true;
+
+function getDaysOverdue(inv) {
+  const due = new Date(inv.due);
+  const now = new Date();
+  return Math.floor((now - due) / (1000 * 60 * 60 * 24));
+}
+
+function renderInvoices() {
+  const el = document.getElementById('invoiceList');
+  const outstanding = invoices.filter(inv => !inv.paid);
+  
+  if (!outstanding.length) {
+    el.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">🎉 All invoices paid! Add a new one to test.</p>';
+    return;
+  }
+
+  el.innerHTML = outstanding.map(inv => {
+    const days = getDaysOverdue(inv);
+    const dayClass = inv.paid ? 'days-paid' : (days > 30 ? 'days-overdue' : days > 0 ? 'days-due' : '');
+    const dayLabel = inv.paid ? 'Paid' : (days > 0 ? `${days}d overdue` : `Due in ${Math.abs(days)}d`);
+    return `<div class="invoice-row" onclick="selectInvoice('${inv.num}')" style="cursor:pointer;${selectedInvoice && selectedInvoice.num === inv.num ? 'background:#f5f3ff;border-radius:4px;padding-left:8px;' : ''}">
+      <div>
+        <div class="client">${inv.client}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">${inv.num} · Due ${inv.due}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="amount">${inv.amount}</div>
+        <span class="days ${dayClass}">${dayLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectSequence(i) {
+  selectedSequence = i;
+  renderSequence();
+  renderEmail();
+}
+
+function selectInvoice(num) {
+  selectedInvoice = invoices.find(i => i.num === num);
+  selectedSequence = 0;
+  renderInvoices();
+  renderSequence();
+  renderEmail();
+}
+
+function renderSequence() {
+  const el = document.getElementById('sequence');
+  if (!selectedInvoice) {
+    el.innerHTML = sequences.map((s, i) => `<div class="seq-step"><div class="seq-day">Day ${s.day}</div><div class="seq-label">${s.label}</div></div>`).join('');
+    return;
+  }
+  const days = getDaysOverdue(selectedInvoice);
+  el.innerHTML = sequences.map((s, i) => {
+    let cls = '';
+    if (i === selectedSequence) cls = 'active';
+    if (days >= s.day) cls += ' active';
+    return `<div class="seq-step ${cls}" onclick="selectSequence(${i})">
+      <div class="seq-day">Day ${s.day}</div>
+      <div class="seq-label">${s.label}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderEmail() {
+  const el = document.getElementById('emailPreview');
+  if (!selectedInvoice) {
+    el.innerHTML = '<div class="subject">Select an invoice above to preview</div><div class="body">Click on any outstanding invoice to see the follow-up email.</div>';
+    return;
+  }
+
+  const seq = sequences[selectedSequence];
+  const inv = selectedInvoice;
+  const days = getDaysOverdue(inv);
+  let template = templates[seq.tone](inv);
+
+  const vars = {
+    '{client}': inv.client,
+    '{num}': inv.num,
+    '{amount}': inv.amount,
+    '{due}': inv.due,
+    '{days}': days > 0 ? days : Math.abs(days),
+    '{deadline}': new Date(Date.now() + 7*86400000).toISOString().slice(0,10),
+    '{me}': 'Your Name / Company',
+  };
+
+  for (const [k, v] of Object.entries(vars)) {
+    template = template.replace(new RegExp(k, 'g'), v);
+  }
+
+  el.innerHTML = `<div class="subject">Subject: ${seq.subject.replace('{num}', inv.num).replace('{days}', days)}</div><div class="body">${template}</div>`;
+}
+
+function sendEmail() {
+  if (!selectedInvoice) return toast('Select an invoice first.');
+  toast(`📤 Email sent to ${selectedInvoice.client} (simulated). In production, this sends via Gmail/Outlook API.`);
+}
+
+function copyEmail() {
+  if (!selectedInvoice) return toast('Select an invoice first.');
+  const text = document.getElementById('emailPreview').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('📋 Email copied to clipboard. Paste into Gmail/Outlook.'));
+}
+
+function markAsPaid() {
+  if (!selectedInvoice) return toast('Select an invoice first.');
+  selectedInvoice.paid = true;
+  selectedInvoice = null;
+  selectedSequence = 0;
+  renderInvoices();
+  renderSequence();
+  renderEmail();
+  toast('✅ Marked as paid. Nice.');
+}
+
+function addDemoInvoice() {
+  const name = prompt('Client name:', 'New Client Co.');
+  if (!name) return;
+  const amount = prompt('Amount:', '$850.00');
+  if (!amount) return;
+  const due = new Date();
+  due.setDate(due.getDate() - Math.floor(Math.random() * 40));
+  invoices.push({
+    id: Date.now(), client: name, num: `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random()*9000)+1000)}`,
+    amount: amount.startsWith('$') ? amount : '$' + amount, due: due.toISOString().slice(0,10), paid: false,
+  });
+  renderInvoices();
+  toast('+ Invoice added.');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Init ──
+renderInvoices();
+renderSequence();
+renderEmail();
+</script>
+</body>
+</html>

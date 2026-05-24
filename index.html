@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Products Store — 12 Tools for Builders</title>
+<style>
+  :root {--bg: #0a0e15; --surface: #111827; --surface-raised: #1a2332; --border: #1e2d44; --text: #e8ecf2; --text-secondary: #8e9bb4; --text-muted: #556078; --accent: #6366f1; --green: #34d399; --amber: #f59e0b; --cyan: #06b6d4; --red: #ef4444; --violet: #8b5cf6; --orange: #f97316; --radius: 10px;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+  header { text-align: center; padding: 32px 0 20px; }
+  header h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); font-size: 0.9rem; max-width: 520px; margin: 6px auto 0; }
+  .stats-bar { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .stat-num { font-size: 1.4rem; font-weight: 700; }
+  .stat-label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; margin-bottom: 36px; }
+  .pcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; transition: border-color 0.15s; }
+  .pcard:hover { border-color: var(--accent); }
+  .pcard.featured { border-color: var(--accent); background: var(--surface-raised); position: relative; }
+  .pcard.featured::before { content: 'TOP'; position: absolute; top: -6px; right: 10px; background: var(--accent); color: #fff; font-size: 0.52rem; font-weight: 700; padding: 2px 7px; border-radius: 100px; letter-spacing: 0.05em; }
+  .pcard .icon { font-size: 1.3rem; margin-bottom: 5px; }
+  .pcard h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 5px; }
+  .pcard .desc { font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; flex: 1; }
+  .tags { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 7px; }
+  .tag { font-size: 0.56rem; padding: 2px 6px; border-radius: 100px; font-weight: 600; letter-spacing: 0.03em; }
+  .tag-live { background: rgba(52,211,153,0.12); color: var(--green); }
+  .price-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
+  .price { font-size: 1.3rem; font-weight: 800; }
+  .price s { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
+  .btn { display: block; text-align: center; padding: 8px 0; border-radius: 5px; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; }
+  .btn-a { background: var(--accent); color: #fff; } .btn-a:hover { background: #4f46e5; }
+  .btn-c { background: var(--cyan); color: #000; } .btn-c:hover { background: #0891b2; }
+  .btn-r { background: var(--red); color: #fff; } .btn-r:hover { background: #b91c1c; }
+  .btn-v { background: var(--violet); color: #fff; } .btn-v:hover { background: #7c3aed; }
+  .btn-g { background: var(--green); color: #000; } .btn-g:hover { background: #059669; }
+  .btn-o { background: var(--orange); color: #fff; } .btn-o:hover { background: #ea580c; }
+  footer { text-align: center; padding: 16px 0; color: var(--text-muted); font-size: 0.7rem; border-top: 1px solid var(--border); }
+  @media (max-width: 700px) { header h1 { font-size: 1.5rem; } .products { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+<header><h1>Digital <span>Products</span> Store</h1><p>12 working tools. One-time purchase. No subscriptions. Built from real pain points on Reddit, HN, and communities.</p></header>
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num" style="color:var(--green);">15</div><div class="stat-label">Live Products</div></div>
+  <div class="stat"><div class="stat-num" style="color:var(--accent);">1</div><div class="stat-label">Pipeline</div></div>
+  <div class="stat"><div class="stat-num">$29-199</div><div class="stat-label">Price Range</div></div>
+  <div class="stat"><div class="stat-num" style="color:var(--amber);">18K+</div><div class="stat-label">Target Sales/Month</div></div>
+</div>
+<div class="products">
+  <div class="pcard featured"><div class="icon">📝</div><h3>SEO Blog Engine</h3><div class="desc">Generate complete SEO blog posts. 6 templates, meta titles, FAQs, internal links. Proven: $948 in 10 days.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$49</span><s>$79</s></div><a href="seo-blog-engine/index.html" class="btn btn-a">Get It →</a></div>
+  <div class="pcard featured"><div class="icon">📄</div><h3>SimpleInvoice</h3><div class="desc">Invoicing for solos. No account, no subscription. Save clients, print, download PDF. 111 Redditors demanded this.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$29</span><s>$49</s></div><a href="simple-invoice/index.html" class="btn btn-a">Get It →</a></div>
+  <div class="pcard"><div class="icon">📥</div><h3>PDF Invoice Extractor</h3><div class="desc">Drop PDF → structured data. Extracts vendor, amounts, line items. Export CSV/JSON. 3 sample formats.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$79</span></div><a href="pdf-invoice-extractor/index.html" class="btn btn-c">Get It →</a></div>
+  <div class="pcard"><div class="icon">📧</div><h3>Email Deliverability Kit</h3><div class="desc">Audit SPF/DKIM/DMARC, 0-100 score, 30-day warmup, pre-launch checklist. Stop landing in spam.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$67</span></div><a href="email-deliverability-kit/index.html" class="btn btn-r">Get It →</a></div>
+  <div class="pcard"><div class="icon">💰</div><h3>InvoiceChaser</h3><div class="desc">4-step automated follow-up for unpaid invoices. Pre-written templates adapt by overdue days. Recover lost revenue.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$39</span></div><a href="invoice-chaser/index.html" class="btn btn-v">Get It →</a></div>
+  <div class="pcard"><div class="icon">🏦</div><h3>BankMatch Reconciliation</h3><div class="desc">Upload bank CSV + invoices. Auto-match payments, categorize transactions, flag discrepancies. Net income in seconds.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$79</span></div><a href="bankmatch-reconciliation/index.html" class="btn btn-g">Get It →</a></div>
+  <div class="pcard"><div class="icon">💬</div><h3>WhatsApp Bot Kit</h3><div class="desc">Auto-reply flows for 4 business types. Quick reply buttons, order taking, booking. No coding required.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$79</span></div><a href="whatsapp-bot-kit/index.html" class="btn btn-c">Get It →</a></div>
+  <div class="pcard"><div class="icon">🎯</div><h3>LeadQualifier</h3><div class="desc">24/7 chat widget. Pre-qualifies leads, scores hot/warm/cold, alerts owner only for real prospects. 4 industries.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$99</span></div><a href="lead-qualifier/index.html" class="btn btn-r">Get It →</a></div>
+  <div class="pcard"><div class="icon">🛡</div><h3>SOC2 Ready</h3><div class="desc">Compliance evidence scanner. 19 checks across CC1-CC7. Auditor-ready reports. For SaaS founders.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$199</span></div><a href="soc2-ready/index.html" class="btn btn-v">Get It →</a></div>
+  <div class="pcard featured"><div class="icon">🔍</div><h3>AI Visibility Audit</h3><div class="desc">Check if ChatGPT, Claude, Perplexity recommend your brand. GEO score + 6 actionable fixes. Hottest 2026 trend.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$149</span></div><a href="ai-visibility-audit/index.html" class="btn btn-o">Get It →</a></div>
+  <div class="pcard"><div class="icon">🕷</div><h3>CrawlShield</h3><div class="desc">Block AI crawlers burning your bandwidth. Config generator for robots.txt, nginx, Cloudflare, .htaccess. Save $284/mo.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$49</span><s>$99</s></div><a href="crawl-shield/index.html" class="btn btn-r">Get It →</a></div>
+  <div class="pcard"><div class="icon">📊</div><h3>AgencyAuditor</h3><div class="desc">Verify your marketing agency's ROI. Red flag detection, fire risk score, comparison vs benchmarks. For companies paying $50K+/mo.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$149</span></div><a href="agency-auditor/index.html" class="btn btn-v">Get It →</a></div>
+  <div class="pcard"><div class="icon">🐋</div><h3>DockSecure CVE Scanner</h3><div class="desc">Scan Docker containers for critical vulnerabilities. 12 real CVEs detected, fix versions suggested. For homelab & self-hosted.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$29</span><s>$79</s></div><a href="docksecure-cve-scanner/index.html" class="btn btn-g">Get It →</a></div>
+  <div class="pcard"><div class="icon">🗺</div><h3>DevPath Career Roadmap</h3><div class="desc">Personalized 90-day DevOps learning path. Skill gap analysis, role matching, week-by-week tasks. 5 target roles.</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$29</span></div><a href="devpath-career/index.html" class="btn btn-c">Get It →</a></div>
+  <div class="pcard featured"><div class="icon">👶</div><h3>KidSafe YouTube</h3><div class="desc">Parental monitoring dashboard. Watch history, channel whitelist/blacklist, shorts blocker. Father of two said "I'll invest."</div><div class="tags"><span class="tag tag-live">LIVE</span></div><div class="price-row"><span class="price">$79/yr</span></div><a href="kidsafe-youtube/index.html" class="btn btn-o">Get It →</a></div>
+</div>
+<footer>Digital Products Store &copy; 2026 — 15 tools. Zero subscriptions. Built from pain, shipped immediately. New weekly.</footer>
+</div>
+</body>
+</html>

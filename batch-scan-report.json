@@ -1,0 +1,128 @@
+{
+  "/index.html": {
+    "size": 10867,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/store.html": {
+    "size": 16629,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/sales-dashboard.html": {
+    "size": 12689,
+    "issues": [
+      "heavy innerHTML usage (4 occurrences)"
+    ],
+    "status": "ISSUES"
+  },
+  "/launch-tracker.html": {
+    "size": 13670,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/lead-qualifier/index.html": {
+    "size": 21185,
+    "issues": [
+      "heavy innerHTML usage (6 occurrences)"
+    ],
+    "status": "ISSUES"
+  },
+  "/agency-auditor/index.html": {
+    "size": 19565,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/whatsapp-bot-kit/index.html": {
+    "size": 16880,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/bankmatch-reconciliation/index.html": {
+    "size": 18915,
+    "issues": [
+      "heavy innerHTML usage (4 occurrences)"
+    ],
+    "status": "ISSUES"
+  },
+  "/affiliate/index.html": {
+    "size": 12511,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/affiliate/tracker.html": {
+    "size": 15664,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/simple-invoice/index.html": {
+    "size": 14615,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/soc2-ready/index.html": {
+    "size": 17522,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/crawl-shield/index.html": {
+    "size": 15308,
+    "issues": [
+      "heavy innerHTML usage (5 occurrences)"
+    ],
+    "status": "ISSUES"
+  },
+  "/email-deliverability-kit/index.html": {
+    "size": 13930,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/devpath-career/index.html": {
+    "size": 19438,
+    "issues": [
+      "heavy innerHTML usage (4 occurrences)"
+    ],
+    "status": "ISSUES"
+  },
+  "/ai-visibility-audit/index.html": {
+    "size": 10892,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/pdf-invoice-extractor/index.html": {
+    "size": 18232,
+    "issues": [
+      "script#0: unbalanced parens (183( vs 184))"
+    ],
+    "status": "ISSUES"
+  },
+  "/invoice-chaser/index.html": {
+    "size": 15185,
+    "issues": [
+      "heavy innerHTML usage (6 occurrences)"
+    ],
+    "status": "ISSUES"
+  },
+  "/docksecure-cve-scanner/index.html": {
+    "size": 15248,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/kidsafe-youtube/index.html": {
+    "size": 20354,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/seo-blog-engine/index.html": {
+    "size": 9520,
+    "issues": [],
+    "status": "PASS"
+  },
+  "/seo-blog-engine/app.html": {
+    "size": 16124,
+    "issues": [
+      "heavy innerHTML usage (5 occurrences)"
+    ],
+    "status": "ISSUES"
+  }
+}

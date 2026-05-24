@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrawlShield — Block AI Crawlers & Save Bandwidth</title>
+<style>
+  :root {--bg: #f8fafc; --surface: #fff; --border: #e2e8f0; --text: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8; --accent: #dc2626; --accent-hover: #b91c1c; --green: #16a34a; --amber: #d97706; --radius: 8px;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 960px; margin: 0 auto; }
+
+  header { text-align: center; padding: 28px 0 16px; }
+  header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); font-size: 0.92rem; margin-top: 4px; }
+
+  .domain-input { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .domain-input input { padding: 12px 18px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 1rem; width: 320px; font-family: inherit; }
+  .domain-input input:focus { outline: none; border-color: var(--accent); }
+  .domain-input button { padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .domain-input button:hover { background: var(--accent-hover); }
+
+  .estimates { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .est-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+  .est-card .num { font-size: 1.6rem; font-weight: 700; }
+  .est-card .label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+  .panel-body { padding: 14px; font-size: 0.82rem; max-height: 350px; overflow-y: auto; }
+
+  .crawler-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f1f3; font-size: 0.8rem; }
+  .crawler-row .icon { font-size: 1.2rem; flex-shrink: 0; }
+  .crawler-row .name { font-weight: 600; flex: 1; }
+  .crawler-row .reqs { font-family: 'SF Mono', monospace; font-size: 0.75rem; color: var(--text-secondary); min-width: 90px; text-align: right; }
+  .crawler-row .cost { font-family: 'SF Mono', monospace; font-size: 0.78rem; color: var(--accent); font-weight: 600; min-width: 65px; text-align: right; }
+  .crawler-row .toggle-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); font-size: 0.68rem; cursor: pointer; background: var(--surface); font-weight: 600; }
+  .toggle-btn.blocked { background: rgba(220,38,38,0.08); color: var(--accent); border-color: var(--accent); }
+  .toggle-btn.allowed { background: rgba(22,163,74,0.08); color: var(--green); border-color: var(--green); }
+
+  code { background: #f1f4f9; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .config-block { background: #0d1117; color: #c9d1d9; padding: 14px; border-radius: 6px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.73rem; line-height: 1.6; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+  .config-block .comment { color: #8b949e; }
+  .config-block .directive { color: #ff7b72; }
+  .config-block .value { color: #79c0ff; }
+
+  .tab-row { display: flex; gap: 2px; margin-bottom: 12px; }
+  .tab { padding: 7px 14px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; border: 1px solid var(--border); background: var(--surface); font-weight: 500; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+
+  .upgrade { background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; padding: 18px; border-radius: var(--radius); text-align: center; margin-top: 12px; }
+  .upgrade h3 { margin-bottom: 4px; }
+  .upgrade p { font-size: 0.8rem; opacity: 0.9; margin-bottom: 10px; }
+  .btn-white { background: #fff; color: var(--accent); padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; font-size: 0.82rem; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 768px) { .split, .estimates { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>Crawl<span>Shield</span></h1>
+  <p>AI crawlers cost you real money. Block them, monitor them, or rate-limit them — in 5 minutes.</p>
+</header>
+
+<div class="domain-input">
+  <input type="text" id="domainInput" placeholder="Enter your domain (e.g., myapp.com)" value="myapp.com" onkeydown="if(event.key==='Enter')analyzeDomain()">
+  <button onclick="analyzeDomain()">▶ Analyze &amp; Generate Configs</button>
+</div>
+
+<div id="results" style="display:none;">
+  <div class="estimates">
+    <div class="est-card"><div class="num" style="color:var(--accent);" id="estRequests">8.2M</div><div class="label">AI Crawler Requests/Mo</div></div>
+    <div class="est-card"><div class="num" style="color:var(--accent);" id="estBandwidth">1.4 TB</div><div class="label">Bandwidth Wasted</div></div>
+    <div class="est-card"><div class="num" style="color:var(--green);" id="estSavings">$284</div><div class="label">Monthly Savings (Vercel)</div></div>
+    <div class="est-card"><div class="num" style="color:var(--amber);" id="estCrawlers">7</div><div class="label">Active AI Crawlers</div></div>
+  </div>
+
+  <div class="split">
+    <div class="panel">
+      <div class="panel-header"><span>🕷 AI Crawlers Hitting Your Site</span><span style="font-size:0.7rem;color:var(--text-muted);">Toggle to block/allow</span></div>
+      <div class="panel-body" id="crawlerList"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span>⚙ Generated Config</span><button onclick="copyConfig()" style="border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-size:0.68rem;cursor:pointer;background:var(--surface);">📋 Copy</button></div>
+      <div class="panel-body">
+        <div class="tab-row" id="tabs">
+          <button class="tab active" onclick="switchTab('robots')">robots.txt</button>
+          <button class="tab" onclick="switchTab('nginx')">nginx</button>
+          <button class="tab" onclick="switchTab('cf')">Cloudflare</button>
+          <button class="tab" onclick="switchTab('htaccess')">.htaccess</button>
+        </div>
+        <div class="config-block" id="configOutput"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="upgrade">
+  <h3>Pro: Live Monitoring Dashboard + Auto-Block + Email Alerts</h3>
+  <p>Pro connects to your Cloudflare/Vercel/nginx logs, shows real-time crawler traffic, and auto-blocks new AI crawlers as they appear. $49 one-time config + $99/yr monitoring.</p>
+  <button class="btn-white" onclick="alert('CrawlShield Pro: $49 one-time config pack + $99/yr monitoring. Live dashboard, auto-block, email alerts, bandwidth savings reports.')">Get Pro — $49 / $99yr</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const crawlers = [
+  { name: 'Meta AI (FacebookBot)', agent: 'facebookexternalua', reqs: '3.2M', bandwidth: '587 GB', cost: '$98', blocked: true, icon: '📘' },
+  { name: 'ClaudeBot (Anthropic)', agent: 'claudebot', reqs: '1.8M', bandwidth: '312 GB', cost: '$67', blocked: true, icon: '🎯' },
+  { name: 'GPTBot (OpenAI)', agent: 'gptbot', reqs: '1.1M', bandwidth: '204 GB', cost: '$42', blocked: false, icon: '🧠' },
+  { name: 'PerplexityBot', agent: 'perplexitybot', reqs: '890K', bandwidth: '145 GB', cost: '$31', blocked: true, icon: '🔮' },
+  { name: 'Google-Extended', agent: 'google-extended', reqs: '620K', bandwidth: '98 GB', cost: '$22', blocked: false, icon: '🔍' },
+  { name: 'Bytespider (ByteDance)', agent: 'bytespider', reqs: '420K', bandwidth: '67 GB', cost: '$16', blocked: true, icon: '🎵' },
+  { name: 'Cohere AI', agent: 'cohere-ai', reqs: '180K', bandwidth: '31 GB', cost: '$8', blocked: true, icon: '🤖' },
+];
+
+let currentTab = 'robots';
+
+function formatNum(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : n.toString(); }
+
+function analyzeDomain() {
+  const domain = document.getElementById('domainInput').value.trim();
+  if (!domain) return toast('Enter a domain first.');
+  document.getElementById('results').style.display = 'block';
+  renderCrawlers();
+  updateEstimates();
+  generateConfig();
+  toast('✅ Analysis complete. Configs generated.');
+}
+
+function renderCrawlers() {
+  document.getElementById('crawlerList').innerHTML = crawlers.map(c => `
+    <div class="crawler-row">
+      <span class="icon">${c.icon}</span>
+      <div class="name">${c.name}<br><span style="font-size:0.68rem;color:var(--text-muted);">${c.agent}</span></div>
+      <div class="reqs">${c.reqs} reqs<br><span style="font-size:0.65rem;">${c.bandwidth}</span></div>
+      <div class="cost">${c.cost}</div>
+      <button class="toggle-btn ${c.blocked ? 'blocked' : 'allowed'}" onclick="toggleCrawler('${c.agent}')">${c.blocked ? '🚫 Blocked' : '✅ Allowed'}</button>
+    </div>
+  `).join('');
+}
+
+function toggleCrawler(agent) {
+  const c = crawlers.find(c => c.agent === agent);
+  if (c) { c.blocked = !c.blocked; }
+  renderCrawlers();
+  updateEstimates();
+  generateConfig();
+}
+
+function updateEstimates() {
+  const blocked = crawlers.filter(c => c.blocked);
+  const blockedReqs = blocked.reduce((s, c) => s + parseFloat(c.reqs.replace('M','').replace('K','')) * (c.reqs.includes('M') ? 1e6 : 1e3), 0);
+  const blockedBW = blocked.reduce((s, c) => s + parseFloat(c.bandwidth), 0);
+  const blockedCost = blocked.reduce((s, c) => s + parseInt(c.cost.replace('$','')), 0);
+  
+  document.getElementById('estRequests').textContent = formatNum(Math.round(8200000 - blockedReqs));
+  document.getElementById('estBandwidth').textContent = (1.44 - blockedBW/1000).toFixed(1) + ' TB';
+  document.getElementById('estSavings').textContent = '$' + blockedCost;
+  document.getElementById('estCrawlers').textContent = crawlers.filter(c => !c.blocked).length;
+}
+
+function generateConfig() {
+  const domain = document.getElementById('domainInput').value.trim();
+  const blocked = crawlers.filter(c => c.blocked);
+  const output = document.getElementById('configOutput');
+
+  if (currentTab === 'robots') {
+    output.innerHTML = `<span class="comment"># CrawlShield — robots.txt for ${domain}</span>
+<span class="comment"># Generated: ${new Date().toISOString().slice(0,10)}</span>
+<span class="comment"># Save as: https://${domain}/robots.txt</span>
+
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Allow: /
+
+<span class="comment"># --- AI Crawler Blocks ---</span>
+${blocked.map(c => `<span class="directive">User-agent:</span> <span class="value">${c.agent}</span>
+<span class="directive">Disallow:</span> <span class="value">/</span>
+`).join('')}
+<span class="comment"># Total blocked: ${blocked.length} AI crawlers</span>
+<span class="comment"># Est. bandwidth saved: ${blocked.reduce((s,c)=>s+parseFloat(c.bandwidth),0).toFixed(0)} GB/mo</span>`;
+  } else if (currentTab === 'nginx') {
+    output.innerHTML = `<span class="comment"># CrawlShield — nginx config for ${domain}</span>
+<span class="comment"># Place in server block or include separately</span>
+
+<span class="comment"># Rate limit AI crawlers to 1 req/sec</span>
+<span class="directive">limit_req_zone</span> <span class="value">$http_user_agent</span> zone=crawler_limit:10m rate=1r/s;
+
+<span class="comment"># Block specific AI crawler user agents</span>
+${blocked.map(c => `<span class="directive">if</span> ($http_user_agent ~* <span class="value">"${c.agent}"</span>) {
+    <span class="directive">return</span> <span class="value">403</span>;
+}
+`).join('')}
+<span class="comment"># Apply rate limiting to remaining crawlers</span>
+<span class="directive">location</span> / {
+    <span class="directive">if</span> ($http_user_agent ~* <span class="value">"(bot|crawler|spider|scraper)"</span>) {
+        <span class="directive">limit_req</span> zone=crawler_limit burst=5 nodelay;
+    }
+}`;
+  } else if (currentTab === 'cf') {
+    output.innerHTML = `<span class="comment"># CrawlShield — Cloudflare WAF Rules for ${domain}</span>
+<span class="comment"># Security → WAF → Custom Rules → Create Rule</span>
+
+<span class="comment"># Rule 1: Block known AI crawler user agents</span>
+<span class="comment"># Expression:</span>
+<span class="value">(http.user_agent contains "${blocked.map(c=>c.agent).join('" or http.user_agent contains "')}")</span>
+<span class="comment"># Action: Block</span>
+
+<span class="comment"># Rule 2: Rate limit all bot traffic</span>
+<span class="comment"># Security → WAF → Rate Limiting Rules</span>
+<span class="comment"># Path: /*</span>
+<span class="comment"># Rate: 10 requests per 10 seconds</span>
+<span class="comment"># When: http.user_agent contains "bot"</span>
+
+<span class="comment"># For Cloudflare Pro+ users — Managed Challenge:</span>
+<span class="comment"># Expression: cf.client.bot</span>
+<span class="comment"># Action: Managed Challenge</span>
+<span class="comment"># This handles ALL bots, including AI crawlers</span>`;
+  } else if (currentTab === 'htaccess') {
+    output.innerHTML = `<span class="comment"># CrawlShield — .htaccess for ${domain}</span>
+<span class="comment"># Place in your web root</span>
+
+<span class="directive">RewriteEngine</span> <span class="value">On</span>
+
+<span class="comment"># Block AI crawlers by user agent</span>
+${blocked.map(c => `<span class="directive">RewriteCond</span> %{HTTP_USER_AGENT} <span class="value">${c.agent}</span> [NC]
+<span class="directive">RewriteRule</span> <span class="value">.*</span> - [F,L]
+
+`).join('')}
+<span class="comment"># Rate limit all bots (requires mod_ratelimit)</span>
+<span class="comment"># SetEnvIf User-Agent "bot" rate_limit_bot</span>
+<span class="comment"># SetOutputFilter RATE_LIMIT; SetEnv rate-limit 400</span>`;
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  generateConfig();
+}
+
+function copyConfig() {
+  const text = document.getElementById('configOutput').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('📋 Config copied to clipboard.'));
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

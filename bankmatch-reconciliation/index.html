@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BankMatch — Bookkeeping Reconciliation Made Simple</title>
+<style>
+  :root {
+    --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+    --text: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
+    --accent: #2563eb; --accent-hover: #1d4ed8; --green: #16a34a; --amber: #d97706; --red: #dc2626;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 1000px; margin: 0 auto; }
+
+  header { text-align: center; padding: 32px 0 20px; }
+  header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); margin-top: 4px; font-size: 0.95rem; }
+
+  .toolbar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .btn { padding: 10px 20px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f1f5f9; }
+
+  .upload-section {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+  }
+  .drop-card {
+    background: var(--surface); border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 28px; text-align: center; cursor: pointer; transition: border-color 0.2s;
+  }
+  .drop-card:hover { border-color: var(--accent); background: #f8faff; }
+  .drop-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .drop-card h3 { font-size: 0.95rem; margin-bottom: 4px; }
+  .drop-card p { font-size: 0.75rem; color: var(--text-muted); }
+
+  .stats-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 18px; text-align: center; flex: 1; min-width: 100px;
+  }
+  .stat-card .num { font-size: 1.6rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .match-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .match-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: #f8fafc; }
+  .match-table td { padding: 8px 12px; border-bottom: 1px solid #f0f4f8; }
+  .match-table .matched { background: #f0fdf4; }
+  .match-table .unmatched { background: #fef2f2; }
+  .match-table .diff { background: #fffbeb; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.03em; }
+  .tag-match { background: #dcfce7; color: var(--green); }
+  .tag-unmatch { background: #fef2f2; color: var(--red); }
+  .tag-diff { background: #fffbeb; color: var(--amber); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+  .panel-body { padding: 14px; max-height: 350px; overflow-y: auto; }
+
+  .upgrade-banner {
+    background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff;
+    padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 16px;
+  }
+  .upgrade-banner h3 { margin-bottom: 6px; }
+  .upgrade-banner p { font-size: 0.85rem; opacity: 0.9; margin-bottom: 12px; }
+  .btn-white { background: #fff; color: var(--accent); padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) { .upload-section { grid-template-columns: 1fr; } .stats-row { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>Bank<span>Match</span></h1>
+  <p>Upload bank CSV + invoice list. Auto-categorize transactions, match payments, flag discrepancies. Done in seconds.</p>
+</header>
+
+<div class="upload-section">
+  <div class="drop-card" onclick="loadBankCSV()">
+    <div class="icon">🏦</div>
+    <h3>Upload Bank CSV</h3>
+    <p>Export from Chase, BofA, Wells Fargo, or any bank. We auto-detect format.</p>
+  </div>
+  <div class="drop-card" onclick="loadInvoiceCSV()">
+    <div class="icon">📄</div>
+    <h3>Upload Invoice List</h3>
+    <p>CSV with invoice numbers, client names, and amounts. Or use our sample data.</p>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="runReconciliation()">▶ Run Reconciliation</button>
+  <button class="btn btn-outline" onclick="exportCSV()">⬇ Export CSV</button>
+  <button class="btn btn-outline" onclick="loadDemoData()">📋 Load Demo Data</button>
+</div>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="panel">
+  <div class="panel-header"><span>📊 Reconciliation Results</span><span id="resultCount" style="font-size:0.75rem;color:var(--text-muted);">Load data first</span></div>
+  <div class="panel-body" style="padding:0;max-height:500px;overflow:auto;">
+    <table class="match-table" id="matchTable"><thead><tr><th>Status</th><th>Bank Transaction</th><th>Amount</th><th>Matched Invoice</th><th>Invoice Amount</th><th>Action</th></tr></thead><tbody id="matchBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Click "Load Demo Data" or "Run Reconciliation" to begin</td></tr></tbody></table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-header"><span>🏷 Auto-Categorized Transactions</span><span style="font-size:0.75rem;color:var(--text-muted);">AI-powered categorization</span></div>
+  <div class="panel-body" id="categoriesBody">
+    <p style="text-align:center;color:var(--text-muted);padding:20px;">Categories will appear after reconciliation</p>
+  </div>
+</div>
+
+<div class="upgrade-banner">
+  <h3>Pro: Auto-Sync Bank + Accounting Integration</h3>
+  <p>Pro auto-imports from bank feeds (Plaid), syncs with QuickBooks/Xero, and provides monthly reconciliation reports. $79 one-time.</p>
+  <button class="btn-white" onclick="alert('Pro version: $79 one-time. Includes Plaid bank integration, QuickBooks/Xero sync, auto-categorization rules, and monthly reconciliation reports.')">Get Pro — $79</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Demo data ──
+const banks = [
+  { date: '2026-05-01', desc: 'STRIPE TRANSFER', amount: 3240.00, category: 'Income' },
+  { date: '2026-05-03', desc: 'TECHSTARTUP INC PAYMENT', amount: 3200.00, category: 'Income' },
+  { date: '2026-05-05', desc: 'AWS WEB SERVICES', amount: -187.42, category: 'Software' },
+  { date: '2026-05-05', desc: 'GITHUB INC', amount: -44.00, category: 'Software' },
+  { date: '2026-05-07', desc: 'GREENLEAF ORGANICS ACH', amount: 6300.00, category: 'Income' },
+  { date: '2026-05-08', desc: 'GREENLEAF ORGANICS ACH2', amount: 6300.00, category: 'Income' },
+  { date: '2026-05-10', desc: 'NOTION LABS', amount: -96.00, category: 'Software' },
+  { date: '2026-05-12', desc: 'GOOGLE WORKSPACE', amount: -72.00, category: 'Software' },
+  { date: '2026-05-14', desc: 'UPWORK FREELANCE', amount: -450.00, category: 'Contractor' },
+  { date: '2026-05-15', desc: 'DATAFLOW ANALYTICS LLC', amount: 13856.00, category: 'Income' },
+  { date: '2026-05-17', desc: 'OFFICE DEPOT', amount: -89.50, category: 'Office Supplies' },
+  { date: '2026-05-18', desc: 'ZOOM VIDEO COMM', amount: -159.90, category: 'Software' },
+  { date: '2026-05-20', desc: 'CLOUDPEAK SAAS PAYMENT', amount: 786.55, category: 'Income' },
+  { date: '2026-05-22', desc: 'ADOBE CREATIVE CLOUD', amount: -59.99, category: 'Software' },
+  { date: '2026-05-22', desc: 'WEWORK RENT', amount: -1800.00, category: 'Rent' },
+  { date: '2026-05-25', desc: 'STRIPE TRANSFER', amount: 1250.00, category: 'Income' },
+  { date: '2026-05-27', desc: 'INSURANCE PREMIUM', amount: -275.00, category: 'Insurance' },
+  { date: '2026-05-28', desc: 'VERIZON WIRELESS', amount: -124.50, category: 'Utilities' },
+];
+
+const invoices_list = [
+  { num: 'INV-2026-0042', client: 'TechStartup Inc.', amount: 3200.00 },
+  { num: 'SM-2026-0112', client: 'GreenLeaf Organics', amount: 12600.00 },
+  { num: 'INV-2026-0482', client: 'DataFlow Analytics', amount: 13856.00 },
+  { num: '2A3B-4C5D', client: 'CloudPeak SaaS', amount: 786.55 },
+  { num: 'INV-2026-0512', client: 'NexGen Bio', amount: 4500.00 },
+  { num: 'INV-2026-0445', client: 'Acme Corp', amount: 2150.00 },
+];
+
+const categories = [
+  { name: 'Income', total: 0, count: 0, color: 'var(--green)' },
+  { name: 'Software', total: 0, count: 0, color: 'var(--accent)' },
+  { name: 'Contractor', total: 0, count: 0, color: 'var(--amber)' },
+  { name: 'Rent', total: 0, count: 0, color: 'var(--red)' },
+  { name: 'Office Supplies', total: 0, count: 0, color: '#8b5cf6' },
+  { name: 'Insurance', total: 0, count: 0, color: '#06b6d4' },
+  { name: 'Utilities', total: 0, count: 0, color: '#f59e0b' },
+];
+
+let reconciliation = null;
+
+// ── Auto-categorize engine ──
+function autoCategorize(desc) {
+  const rules = [
+    { pattern: /stripe|transfer|payment|ach|client|invoice/i, category: 'Income' },
+    { pattern: /aws|github|notion|google|zoom|adobe|slack|linear|figma|vercel/i, category: 'Software' },
+    { pattern: /upwork|fiverr|freelance|contractor|outsource/i, category: 'Contractor' },
+    { pattern: /wework|rent|lease|office space/i, category: 'Rent' },
+    { pattern: /office depot|staples|amazon.*supplies|printer/i, category: 'Office Supplies' },
+    { pattern: /insurance|premium|liability/i, category: 'Insurance' },
+    { pattern: /verizon|at&t|comcast|electric|utility|internet/i, category: 'Utilities' },
+  ];
+  for (const rule of rules) {
+    if (rule.pattern.test(desc)) return rule.category;
+  }
+  return 'Uncategorized';
+}
+
+// ── Matching engine ──
+function matchInvoicesToBank() {
+  const matches = [];
+  const usedInvoices = new Set();
+  const usedBank = new Set();
+
+  for (const inv of invoices_list) {
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (let i = 0; i < banks.length; i++) {
+      if (usedBank.has(i)) continue;
+      const bank = banks[i];
+      if (bank.amount < 0) continue;
+
+      // Score: exact amount match + name similarity
+      const amountDiff = Math.abs(bank.amount - inv.amount);
+      if (amountDiff < 1) {
+        const bankName = bank.desc.toLowerCase();
+        const clientName = inv.client.toLowerCase();
+        const nameWords = clientName.split(/[\s,.-]+/);
+        const matchCount = nameWords.filter(w => w.length > 3 && bankName.includes(w)).length;
+        const score = 100 - (amountDiff * 10) + (matchCount * 20);
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = { bankIdx: i, bank, score };
+        }
+      }
+    }
+
+    if (bestMatch && bestScore > 50) {
+      matches.push({
+        invoice: inv,
+        bank: bestMatch.bank,
+        status: bestMatch.bank.amount === inv.amount ? 'matched' :
+                Math.abs(bestMatch.bank.amount - inv.amount) < 0.50 ? 'matched' : 'diff',
+        score: bestMatch.score,
+      });
+      usedInvoices.add(inv.num);
+      usedBank.add(bestMatch.bankIdx);
+    } else {
+      matches.push({
+        invoice: inv,
+        bank: null,
+        status: 'unmatched',
+        score: 0,
+      });
+    }
+  }
+
+  // Unmatched bank transactions
+  for (let i = 0; i < banks.length; i++) {
+    if (!usedBank.has(i) && banks[i].amount > 0) {
+      matches.push({
+        invoice: null,
+        bank: banks[i],
+        status: 'unmatched',
+        score: 0,
+      });
+    }
+  }
+
+  return matches;
+}
+
+function runReconciliation() {
+  reconciliation = matchInvoicesToBank();
+  renderResults();
+  renderCategories();
+  renderStats();
+  toast('✅ Reconciliation complete.');
+}
+
+function renderResults() {
+  const body = document.getElementById('matchBody');
+  const rc = reconciliation;
+
+  if (!rc || !rc.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Load demo data or run reconciliation</td></tr>';
+    return;
+  }
+
+  document.getElementById('resultCount').textContent = `${rc.length} transactions analyzed`;
+  const fmt = (n) => '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+  body.innerHTML = rc.map((m, i) => {
+    let statusClass, tagClass, action;
+    if (m.status === 'matched') {
+      statusClass = 'matched';
+      tagClass = 'tag-match';
+      action = '✓ Auto-matched';
+    } else if (m.status === 'diff') {
+      statusClass = 'diff';
+      tagClass = 'tag-diff';
+      action = `⚠ Amount differs: ${fmt(m.bank.amount)} vs ${fmt(m.invoice.amount)}`;
+    } else {
+      statusClass = 'unmatched';
+      tagClass = 'tag-unmatch';
+      action = m.invoice ? '⚠ Invoice has no matching bank transaction — follow up' : '⚠ Bank deposit has no matching invoice — investigate';
+    }
+
+    return `<tr class="${statusClass}">
+      <td><span class="tag ${tagClass}">${m.status.toUpperCase()}</span></td>
+      <td>${m.bank ? `${m.bank.date} — ${m.bank.desc}` : '—'}</td>
+      <td style="font-family:monospace;">${m.bank ? fmt(m.bank.amount) : '—'}</td>
+      <td>${m.invoice ? `${m.invoice.num} — ${m.invoice.client}` : '—'}</td>
+      <td style="font-family:monospace;">${m.invoice ? fmt(m.invoice.amount) : '—'}</td>
+      <td style="font-size:0.78rem;color:var(--text-secondary);">${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCategories() {
+  // Reset
+  for (const c of categories) { c.total = 0; c.count = 0; }
+  // Also add an uncategorized bucket
+  const catMap = {};
+  for (const c of categories) catMap[c.name] = c;
+  catMap['Uncategorized'] = { name: 'Uncategorized', total: 0, count: 0, color: 'var(--text-muted)' };
+
+  for (const bank of banks) {
+    const cat = autoCategorize(bank.desc);
+    if (catMap[cat]) {
+      catMap[cat].total += Math.abs(bank.amount);
+      catMap[cat].count++;
+    }
+  }
+
+  const body = document.getElementById('categoriesBody');
+  const catList = Object.values(catMap).filter(c => c.count > 0);
+  const totalSpend = catList.filter(c => c.name !== 'Income').reduce((s, c) => s + c.total, 0);
+
+  body.innerHTML = '<div style="font-size:0.85rem;margin-bottom:8px;font-weight:600;">Monthly Breakdown</div>' +
+    catList.map(c => {
+      const pct = totalSpend > 0 && c.name !== 'Income' ? Math.round(c.total / totalSpend * 100) : 0;
+      const isIncome = c.name === 'Income';
+      return `<div class="field-row" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f1f3;font-size:0.82rem;">
+        <div>
+          <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:8px;"></span>
+          <strong>${c.name}</strong> <span style="color:var(--text-muted);font-size:0.72rem;">(${c.count} transactions)</span>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <span style="font-family:monospace;color:${isIncome ? 'var(--green)' : 'var(--text)'};font-weight:600;">${isIncome ? '+' : '-'}$${c.total.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+          ${pct > 0 ? `<span style="font-size:0.7rem;color:var(--text-muted);">${pct}%</span>` : ''}
+        </div>
+      </div>`;
+    }).join('') +
+    `<div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid var(--border);font-weight:700;font-size:0.88rem;margin-top:4px;">
+      <span>Net Income (May)</span>
+      <span style="color:var(--green);">+$${((catMap['Income']?.total || 0) - totalSpend).toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+    </div>`;
+}
+
+function renderStats() {
+  const rc = reconciliation;
+  if (!rc) return;
+  const matched = rc.filter(m => m.status === 'matched').length;
+  const unmatched = rc.filter(m => m.status === 'unmatched').length;
+  const diff = rc.filter(m => m.status === 'diff').length;
+  const atRisk = rc.filter(m => m.status === 'unmatched' && m.invoice).reduce((s, m) => s + m.invoice.amount, 0);
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="num" style="color:var(--green);">${matched}</div><div class="label">Matched</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--red);">${unmatched}</div><div class="label">Unmatched</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--amber);">${diff}</div><div class="label">Amount Mismatch</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--red);">$${atRisk.toLocaleString()}</div><div class="label">At Risk</div></div>
+  `;
+}
+
+function exportCSV() {
+  if (!reconciliation) return toast('Run reconciliation first.');
+  let csv = 'Status,Bank Date,Bank Description,Bank Amount,Invoice Number,Client,Invoice Amount\n';
+  for (const m of reconciliation) {
+    csv += `${m.status.toUpperCase()},"${m.bank?.date || ''}","${m.bank?.desc || ''}",${m.bank?.amount || ''},"${m.invoice?.num || ''}","${m.invoice?.client || ''}",${m.invoice?.amount || ''}\n`;
+  }
+  downloadFile(csv, 'reconciliation-results.csv', 'text/csv');
+  toast('📥 CSV exported.');
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadBankCSV() { toast('📤 In production: upload CSV. Demo data loaded instead.'); loadDemoData(); }
+function loadInvoiceCSV() { toast('📤 In production: upload CSV. Demo data loaded instead.'); loadDemoData(); }
+function loadDemoData() { runReconciliation(); }
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Init ──
+loadDemoData();
+</script>
+</body>
+</html>

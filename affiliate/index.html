@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tools Radar — Find the Best AI Tools for Your Business</title>
+<meta name="description" content="Honest reviews of AI tools, SaaS products, and digital marketing software. No hype. Just what works.">
+<style>
+  :root {--bg: #fafbfc; --surface: #fff; --border: #dee2ea; --text: #1a1d26; --text-secondary: #5c6678; --text-muted: #8b93a5; --accent: #2563eb; --green: #16a34a; --amber: #d97706; --radius: 10px; --font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  .logo { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  nav a { margin-left: 24px; font-size: 0.88rem; color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+  nav a:hover { color: var(--text); }
+
+  .hero { text-align: center; padding: 48px 0; }
+  .hero h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 1.1rem; color: var(--text-secondary); max-width: 560px; margin: 0 auto 8px; }
+  .hero .disclosure { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-top: 8px; }
+
+  .launch-ticker { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 36px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .ticker-item { text-align: center; min-width: 180px; }
+  .ticker-item .date { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ticker-item .name { font-weight: 700; font-size: 0.9rem; margin: 4px 0; }
+  .ticker-item .comm { font-size: 0.82rem; color: var(--green); font-weight: 700; }
+
+  .reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 48px; }
+  .review-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: border-color 0.15s, transform 0.15s; }
+  .review-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .review-card.featured { border-color: var(--accent); border-width: 2px; }
+  .review-card .tag { font-size: 0.58rem; padding: 3px 9px; border-radius: 100px; font-weight: 700; letter-spacing: 0.05em; display: inline-block; margin-bottom: 10px; }
+  .tag-launch { background: rgba(22,163,74,0.1); color: var(--green); }
+  .tag-review { background: rgba(37,99,235,0.08); color: var(--accent); }
+  .review-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+  .review-card .meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+  .review-card p { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5; }
+  .review-card .price-row { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; font-size: 0.84rem; }
+  .review-card .price { font-weight: 700; color: var(--accent); }
+  .review-card .commission { font-weight: 700; color: var(--green); }
+
+  .btn { display: inline-block; padding: 10px 22px; border-radius: 6px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: background 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f5f6f9; }
+
+  .how-it-works { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px; margin-bottom: 48px; }
+  .how-it-works h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; text-align: center; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .step { text-align: center; }
+  .step .num { width: 40px; height: 40px; background: var(--accent); color: #fff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 10px; }
+  .step h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+  .step p { font-size: 0.82rem; color: var(--text-secondary); }
+
+  footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+  footer .disclosure { margin-top: 6px; font-style: italic; }
+
+  @media (max-width: 700px) {
+    .hero h1 { font-size: 1.7rem; }
+    .steps { grid-template-columns: 1fr; }
+    .launch-ticker { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="logo">AI Tools <span>Radar</span></div>
+  <nav>
+    <a href="#">Reviews</a>
+    <a href="#">Launch Calendar</a>
+    <a href="#">Comparisons</a>
+    <a href="#">Deals</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>AI tools that <span>actually work.</span></h1>
+  <p>Honest reviews of AI software, SaaS, and digital marketing tools. We buy them, test them, and tell you what's worth your money.</p>
+  <p class="disclosure">We may earn a commission when you buy through our links. This doesn't affect our reviews — we call out garbage when we see it.</p>
+</section>
+
+<div class="launch-ticker">
+  <div class="ticker-item">
+    <div class="date">Launching Jun 6</div>
+    <div class="name">AmpCast AI</div>
+    <div class="comm">100% Commission</div>
+  </div>
+  <div class="ticker-item">
+    <div class="date">Launching Jun 10</div>
+    <div class="name">Audio Dollars</div>
+    <div class="comm">71% Commission</div>
+  </div>
+  <div class="ticker-item">
+    <div class="date">Launching Jun 15</div>
+    <div class="name">AuthorityAI</div>
+    <div class="comm">50% Commission</div>
+  </div>
+  <div class="ticker-item">
+    <div class="date">Launching Jun 22</div>
+    <div class="name">AI Income Engine</div>
+    <div class="comm">100% Commission</div>
+  </div>
+</div>
+
+<div class="reviews">
+  <!-- Featured Review -->
+  <div class="review-card featured">
+    <span class="tag tag-launch">LAUNCHING SOON</span>
+    <h3>AmpCast AI Review: Chris Munch's AI Traffic Tool</h3>
+    <div class="meta">By AI Tools Radar | Updated May 24, 2026</div>
+    <p>Chris Munch is back with another AI traffic play. AmpCast promises to automate podcast-to-social-content pipelines using AI. The front-end is $97 at 100% commission — that's straight cash for affiliates. The real question is whether the tool delivers or it's another launch-day cash grab. We're testing it pre-launch and will have the full review ready.</p>
+    <div class="price-row">
+      <span>Front-End: <span class="price">$97</span></span>
+      <span>Commission: <span class="commission">100% ($97/sale)</span></span>
+    </div>
+    <a href="#" class="btn btn-primary">Read Full Review (Coming Jun 5)</a>
+  </div>
+
+  <div class="review-card">
+    <span class="tag tag-review">REVIEW</span>
+    <h3>AI Income Engine: Sean Donahoe's 100% Commission Play</h3>
+    <div class="meta">By AI Tools Radar | May 24, 2026</div>
+    <p>Sean Donahoe's new launch combines a $27 front-end tool with a $497 webinar upsell — both at 100% commission. That's uncommon. Most vendors cap front-end commissions at 50-60%. Donahoe's track record with high-converting webinars makes this worth watching. The product positions as an "AI income system" — we'll see if the software matches the pitch.</p>
+    <div class="price-row">
+      <span>Front-End: <span class="price">$27 + $497 OTO</span></span>
+      <span>Commission: <span class="commission">100% ($524/sale)</span></span>
+    </div>
+    <a href="#" class="btn btn-outline">Pre-Launch Analysis →</a>
+  </div>
+
+  <div class="review-card">
+    <span class="tag tag-review">COMPARISON</span>
+    <h3>Best JVZoo AI Tools: June 2026 Launch Calendar</h3>
+    <div class="meta">By AI Tools Radar | May 24, 2026</div>
+    <p>June is stacked. AmpCast AI (Jun 6), Audio Dollars (Jun 10), AuthorityAI by Neil Napier (Jun 15), and AI Income Engine (Jun 22). We're tracking launches daily on MunchEye and comparing: which has the best commission structure, which vendors have the strongest upsell funnels, and which tools actually deliver value to buyers.</p>
+    <div class="price-row">
+      <span>Products tracked: <span class="price">13</span></span>
+      <span>Top commission: <span class="commission">$524/sale</span></span>
+    </div>
+    <a href="#" class="btn btn-outline">See Full Calendar →</a>
+  </div>
+
+  <div class="review-card">
+    <span class="tag tag-review">REVIEW</span>
+    <h3>Audio Dollars Review: IM Wealth Builders' Audio Monetization Tool</h3>
+    <div class="meta">By AI Tools Radar | May 24, 2026</div>
+    <p>$17 front-end at 71% commission puts this in the volume-play category. IM Wealth Builders have a mixed track record — some launches deliver solid value at the price point, others are thin. The audio monetization angle is interesting: repurposing audio content across platforms using AI. At $17 it's a low-risk buy for the end user, which helps conversion rates.</p>
+    <div class="price-row">
+      <span>Front-End: <span class="price">$17</span></span>
+      <span>Commission: <span class="commission">71% ($12/sale)</span></span>
+    </div>
+    <a href="#" class="btn btn-outline">Read Review →</a>
+  </div>
+
+  <div class="review-card">
+    <span class="tag tag-review">BEST OF</span>
+    <h3>Neil Napier's AuthorityAI: What We Know So Far</h3>
+    <div class="meta">By AI Tools Radar | May 24, 2026</div>
+    <p>Neil Napier is one of the few JVZoo vendors with a reputation for shipping products that don't fall apart after launch week. AuthorityAI at $37 with 50% commission isn't the highest payout, but Napier's upsell funnels typically add 3-4x to affiliate earnings per customer. If you're picking one launch to promote in June, this has the strongest vendor quality signal.</p>
+    <div class="price-row">
+      <span>Front-End: <span class="price">$37</span></span>
+      <span>Commission: <span class="commission">50% ($18.50 + upsells)</span></span>
+    </div>
+    <a href="#" class="btn btn-outline">Full Analysis →</a>
+  </div>
+
+  <div class="review-card">
+    <span class="tag tag-review">GUIDE</span>
+    <h3>JVZoo Affiliate Guide: How We Pick Products Worth Promoting</h3>
+    <div class="meta">By AI Tools Radar | May 24, 2026</div>
+    <p>We don't promote everything. Here's our filter: (1) Vendor track record — have they shipped working products before? (2) Commission structure — is the front-end payout strong AND are there upsells? (3) Refund risk — do they have a reputation for high refund rates? (4) Buyer value — would we buy this ourselves? Most launches fail at least two of these.</p>
+    <div class="price-row">
+      <span>Products filtered this month: <span class="price">13 → 4 picks</span></span>
+    </div>
+    <a href="#" class="btn btn-outline">Read Our Methodology →</a>
+  </div>
+</div>
+
+<div class="how-it-works">
+  <h2>How We Review AI Tools</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <h4>We Buy It</h4>
+      <p>No vendor demos. No affiliate deck reviews. We purchase the front-end and test it like a real customer would.</p>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <h4>We Stress-Test It</h4>
+      <p>We use the tool for actual work — not just clicking around for 10 minutes. If it breaks, we say so.</p>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <h4>We Tell You Honestly</h4>
+      <p>If a product is garbage, we say it's garbage — even if it pays high commissions. Our reputation is worth more than one sale.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>AI Tools Radar &copy; 2026 — Honest reviews of AI and digital marketing software.</p>
+  <p class="disclosure">Disclosure: Some links on this site are affiliate links. If you click and buy, we may earn a commission at no extra cost to you. We never let commissions influence our reviews. See our full methodology above.</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Blog Engine — AI Content Generator</title>
+<style>
+  :root {
+    --bg: #fafbfc;
+    --surface: #fff;
+    --border: #dde1e6;
+    --text: #1a1d23;
+    --text-secondary: #5f6570;
+    --text-muted: #8b929e;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --green: #16a34a;
+    --radius: 8px;
+    --font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  
+  /* Nav */
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); }
+  .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .btn { background: var(--accent); color: #fff; border: none; padding: 10px 22px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.15s; }
+  .btn:hover { background: var(--accent-hover); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f5f6f8; border-color: #c4c9d1; }
+
+  /* Hero */
+  .hero { padding: 64px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 28px; max-width: 480px; }
+  
+  .hero-visual { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .mini-sheet { font-size: 0.78rem; }
+  .mini-sheet table { width: 100%; border-collapse: collapse; }
+  .mini-sheet th { text-align: left; padding: 6px 8px; background: #f5f6f8; border-bottom: 2px solid var(--border); font-weight: 600; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .mini-sheet td { padding: 6px 8px; border-bottom: 1px solid #f0f1f3; font-size: 0.73rem; }
+  .mini-sheet .gen td { color: var(--green); font-weight: 500; }
+
+  /* How it works */
+  .how { padding: 60px 0; background: var(--surface); border-top: 1px solid var(--border); }
+  .how h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 36px; text-align: center; }
+  .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .how-card { text-align: center; padding: 24px; }
+  .how-card .num { width: 40px; height: 40px; background: var(--accent); color: #fff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 14px; }
+  .how-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+  .how-card p { font-size: 0.88rem; color: var(--text-secondary); }
+
+  /* Pricing */
+  .pricing { padding: 60px 0; text-align: center; }
+  .pricing h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; }
+  .pricing .sub { color: var(--text-secondary); margin-bottom: 36px; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 700px; margin: 0 auto; }
+  .price-card { background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 32px; text-align: left; }
+  .price-card.featured { border-color: var(--accent); position: relative; }
+  .price-card.featured::before { content: 'BEST VALUE'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 4px 14px; border-radius: 100px; letter-spacing: 0.06em; }
+  .price-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+  .price-tag { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em; color: var(--accent); margin-bottom: 12px; }
+  .price-tag s { color: var(--text-muted); font-size: 1rem; font-weight: 400; }
+  .price-features { list-style: none; margin-bottom: 24px; }
+  .price-features li { font-size: 0.88rem; padding: 4px 0; color: var(--text-secondary); }
+  .price-features li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+
+  /* Testimonial */
+  .proof { padding: 48px 0; text-align: center; border-top: 1px solid var(--border); }
+  .proof blockquote { font-size: 1.2rem; font-style: italic; color: var(--text-secondary); max-width: 600px; margin: 0 auto 10px; }
+  .proof .attr { font-size: 0.85rem; color: var(--text-muted); }
+
+  footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
+
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+    .how-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<nav>
+  <div class="logo">SEO<span>BlogEngine</span></div>
+  <a href="#pricing" class="btn" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Get It Now — $49</a>
+</nav>
+
+<header class="hero">
+  <div>
+    <h1>Generate <em>30 SEO blog posts</em> from a spreadsheet in 2 clicks.</h1>
+    <p>Paste your keywords. Hit generate. Get complete blog posts with meta titles, FAQs, and internal links. Built for founders who need content at scale — without an agency.</p>
+    <div style="display:flex;gap:12px;">
+      <a href="#pricing" class="btn">Buy Now — $49</a>
+      <a href="#how" class="btn btn-outline">How It Works</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="mini-sheet">
+      <table>
+        <thead><tr><th>Keyword</th><th>Status</th><th>Post Title</th></tr></thead>
+        <tbody>
+          <tr class="gen"><td>saas onboarding tips</td><td>✓ Done</td><td>7 SaaS Onboarding Tips That Cut Churn by 40%</td></tr>
+          <tr class="gen"><td>cold email deliverability</td><td>✓ Done</td><td>Cold Email Deliverability: The 2026 Setup Guide</td></tr>
+          <tr class="gen"><td>freelancer invoicing</td><td>✓ Done</td><td>Freelancer Invoicing: Stop Losing $3K to Unpaid Bills</td></tr>
+          <tr><td>ai audit tool</td><td>⚡ Ready</td><td style="color:var(--text-muted)">Click generate →</td></tr>
+          <tr><td>whatsapp business bot</td><td>⚡ Ready</td><td style="color:var(--text-muted)">Click generate →</td></tr>
+          <tr><td>soc2 compliance checklist</td><td>⚡ Ready</td><td style="color:var(--text-muted)">Click generate →</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</header>
+
+</div>
+
+<section class="how" id="how">
+  <div class="container">
+    <h2>Three steps. No learning curve.</h2>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="num">1</div>
+        <h3>Paste Keywords</h3>
+        <p>Drop your keyword list into the sheet. One column. That's it.</p>
+      </div>
+      <div class="how-card">
+        <div class="num">2</div>
+        <h3>Click Generate</h3>
+        <p>AI writes complete blog posts, meta titles, FAQs, and internal links — all at once.</p>
+      </div>
+      <div class="how-card">
+        <div class="num">3</div>
+        <h3>Export &amp; Publish</h3>
+        <p>Export to Google Docs, WordPress, or CSV. Schedule and publish.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+<section class="pricing" id="pricing">
+  <h2>One price. Unlimited posts. Forever.</h2>
+  <p class="sub">No subscription. No credit system. Buy once, use forever. BYO AI key.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div class="price-tag">$29</div>
+      <ul class="price-features">
+        <li>Google Sheets add-on</li>
+        <li>Bulk generate blog posts</li>
+        <li>Meta title + FAQ generation</li>
+        <li>3 content templates</li>
+        <li>Export to Google Docs</li>
+        <li>BYO OpenAI/Claude API key</li>
+      </ul>
+      <a href="#" class="btn btn-outline" style="display:block;text-align:center;">Buy Starter — $29</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-name">Pro Bundle</div>
+      <div class="price-tag">$49 <s>$79</s></div>
+      <ul class="price-features">
+        <li>Everything in Starter</li>
+        <li>Web app version (no Sheets needed)</li>
+        <li>12 content templates</li>
+        <li>Internal link strategy generator</li>
+        <li>Competitor content gap analysis</li>
+        <li>WordPress direct publish</li>
+        <li>30-day content calendar builder</li>
+        <li>Lifetime updates included</li>
+      </ul>
+      <a href="#" class="btn" style="display:block;text-align:center;">Buy Pro — $49</a>
+    </div>
+  </div>
+</section>
+</div>
+
+<section class="proof">
+  <div class="container">
+    <blockquote>"Launched a $49 AI tool in Google Sheets — made $948 in 10 days. The demand for simple content generation is insane."</blockquote>
+    <div class="attr">— Real Reddit r/SideProject post, 577 upvotes</div>
+  </section>
+
+<footer>
+  <div class="container">SEO Blog Engine &copy; 2026 — Built for founders who need content at scale</div>
+</footer>
+
+</body>
+</html>

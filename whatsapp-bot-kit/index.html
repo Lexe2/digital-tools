@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsBot — WhatsApp Auto-Reply Builder for Small Business</title>
+<style>
+  :root {
+    --bg: #e5ddd5; --chat-bg: #efeae2; --chat-in: #fff; --chat-out: #d9fdd3;
+    --text: #111b21; --text-secondary: #667781; --accent: #25d366; --accent-hover: #22c55e;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: #dddbd1; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+
+  .phone {
+    width: 400px; height: 720px; background: #fff; border-radius: 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15); overflow: hidden;
+    display: flex; flex-direction: column; position: relative;
+  }
+  .phone-header {
+    background: #075e54; color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .phone-header .back { font-size: 1.2rem; cursor: pointer; }
+  .phone-header .name { font-weight: 600; font-size: 0.95rem; }
+  .phone-header .status { font-size: 0.7rem; opacity: 0.85; }
+  .phone-header .avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: #25d366;
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .phone-chat {
+    flex: 1; overflow-y: auto; padding: 12px; background: var(--chat-bg);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; position: relative; word-wrap: break-word; }
+  .msg-in { background: var(--chat-in); align-self: flex-start; border-top-left-radius: 0; }
+  .msg-out { background: var(--chat-out); align-self: flex-end; border-top-right-radius: 0; }
+  .msg-bot { background: #fff; align-self: flex-start; border-top-left-radius: 0; border-left: 3px solid var(--accent); }
+  .msg-bot .quick { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .msg-bot .quick-btn {
+    background: #fff; border: 1px solid var(--accent); color: var(--accent);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .msg-bot .quick-btn:hover { background: var(--accent); color: #fff; }
+  .msg-bot .quick-btn.selected { background: var(--accent); color: #fff; }
+
+  .msg-time { font-size: 0.62rem; color: var(--text-secondary); text-align: right; margin-top: 2px; }
+
+  .phone-input {
+    display: flex; padding: 8px 10px; background: #f0f2f5; gap: 8px; align-items: center;
+  }
+  .phone-input input {
+    flex: 1; padding: 10px 14px; border-radius: 24px; border: none;
+    font-size: 0.85rem; font-family: inherit; background: #fff;
+  }
+  .phone-input input:focus { outline: none; }
+  .phone-input button {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: var(--accent); color: #fff; font-size: 1.2rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phone-input button:hover { background: var(--accent-hover); }
+
+  .sidebar {
+    position: fixed; right: 10px; top: 50%; transform: translateY(-50%);
+    background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    max-width: 220px; font-size: 0.78rem; z-index: 10;
+  }
+  .sidebar h3 { font-size: 0.8rem; margin-bottom: 8px; color: #075e54; }
+  .sidebar .flow-item {
+    padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; cursor: pointer;
+    border: 1px solid #e0e0e0; transition: all 0.1s;
+  }
+  .sidebar .flow-item:hover { background: #f0f2f5; }
+  .sidebar .flow-item.active { background: #dcf8c6; border-color: var(--accent); }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #111b21; color: #fff; padding: 10px 20px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 500; opacity: 0; transition: opacity 0.3s; z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 500px) { .phone { width: 100%; height: 100vh; border-radius: 0; } .sidebar { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="phone-header">
+    <div class="back">←</div>
+    <div class="avatar" id="botAvatar">🍕</div>
+    <div>
+      <div class="name" id="botName">Tony's Pizza</div>
+      <div class="status" id="botStatus">🤖 Auto-reply bot · Online</div>
+    </div>
+  </div>
+
+  <div class="phone-chat" id="chat">
+    <div class="msg msg-bot">
+      Hey! 👋 Welcome to Tony's Pizza. How can I help?
+      <div class="quick">
+        <button class="quick-btn" onclick="sendQuick('📋 Menu')">📋 Menu</button>
+        <button class="quick-btn" onclick="sendQuick('🛒 Order')">🛒 Order</button>
+        <button class="quick-btn" onclick="sendQuick('⏰ Hours')">⏰ Hours</button>
+      </div>
+      <div class="msg-time">now</div>
+    </div>
+  </div>
+
+  <div class="phone-input">
+    <input type="text" id="msgInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <button onclick="sendMessage()">▶</button>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <h3>⚙ Bot Flows</h3>
+  <div class="flow-item active" onclick="switchBusiness('pizza')">🍕 Pizza Shop</div>
+  <div class="flow-item" onclick="switchBusiness('salon')">💇 Salon</div>
+  <div class="flow-item" onclick="switchBusiness('handyman')">🔧 Handyman</div>
+  <div class="flow-item" onclick="switchBusiness('clinic')">🏥 Clinic</div>
+  <div style="margin-top:8px;font-size:0.7rem;color:var(--text-secondary);">
+    Pro: Custom flows,<br>Google Sheets orders,<br>SMS reminders.<br>
+    <button onclick="alert('Pro: $79 one-time. Custom bot flows, Google Sheets order logging, appointment reminders, and deployment guide for WhatsApp Cloud API.')" style="background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:4px;margin-top:6px;cursor:pointer;font-size:0.7rem;">Get Pro $79</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Bot logic ──
+const businesses = {
+  pizza: {
+    name: "Tony's Pizza",
+    avatar: '🍕',
+    flows: {
+      default: "Hey! 👋 Welcome to Tony's Pizza. How can I help?\n\n📋 Menu\n🛒 Order\n⏰ Hours\n📍 Location",
+      'menu': "🍕 Our Menu (all large 14\"):\n\n1. Margherita — $12\n2. Pepperoni — $14\n3. Hawaiian — $15\n4. Supreme — $17\n5. Veggie — $13\n\nAdd-ons: Extra cheese +$2, Gluten-free crust +$3\n\nType a number to order or type 'order' to start!",
+      '1': "Great choice! Margherita pizza 🍕\n\nHow many? (1-10)",
+      '2': "Pepperoni it is! 🍕\n\nHow many pizzas? (1-10)",
+      '3': "Hawaiian! 🍕🍍\n\nHow many pizzas? (1-10)",
+      '4': "Supreme — loaded! 🍕\n\nHow many pizzas? (1-10)",
+      '5': "Veggie delight! 🥬🍕\n\nHow many pizzas? (1-10)",
+      'hours': "⏰ Hours:\nMon-Thu: 11am-10pm\nFri-Sat: 11am-12am\nSun: 12pm-9pm\n\nDelivery available until 30 min before close.",
+      'location': "📍 We're at 742 Main Street, Downtown.\n\nDelivery radius: 5 miles\nDelivery fee: $3.99\n\nWant to place an order?",
+      'order': "🛒 Let's get your order started!\n\nPickup or Delivery?\n\n🏠 Delivery\n🚶 Pickup",
+      'delivery': "Delivery it is! What's your address?\n\n(Just type your street address)",
+      'pickup': "Pickup — got it! Ready in about 20 min.\n\nWhat would you like to order? Type 'menu' to see our menu.",
+    },
+    afterQty: (qty, lastItem) => {
+      const prices = {1:12,2:14,3:15,4:17,5:13};
+      const price = prices[lastItem] || 14;
+      const total = price * qty;
+      return `Order summary:\n\n${lastItem} pizza × ${qty} = $${total}\n\nConfirm order?\n\n✅ Yes, order\n❌ Cancel`;
+    },
+    confirm: () => "Order confirmed! 🎉\n\nYour order will be ready in ~20 minutes.\nOrder #" + Math.floor(Math.random()*9000+1000) + "\n\nPay at pickup. Thanks for choosing Tony's! 🍕",
+    anyQty: (msg) => {
+      const n = parseInt(msg);
+      return (n >= 1 && n <= 10) ? true : null;
+    }
+  },
+  salon: {
+    name: "Glow Up Salon",
+    avatar: '💇',
+    flows: {
+      default: "Welcome to Glow Up Salon! 💇✨\n\nWhat can I help with?\n\n💇 Book Appointment\n💰 Price List\n⏰ Hours\n📍 Location",
+      'book': "Great! What service?\n\n💇 Haircut — $45\n🎨 Color — $85+\n💅 Manicure — $35\n🧖 Facial — $60\n\nType the service name!",
+      'haircut': "Haircut — $45\n\nPreferred day?\n\n📅 Today\n📅 Tomorrow\n📅 This Week",
+      'color': "Color service starts at $85. Full price depends on hair length and technique.\n\nPreferred day?\n📅 Today\n📅 Tomorrow\n📅 This Week",
+      'today': "Today! What time?\n\n🌅 Morning (9-12)\n☀️ Afternoon (12-4)\n🌙 Evening (4-7)",
+      'morning': "Morning appointment booked! ✨\n\nA stylist will confirm the exact time shortly.\nIf you need to change: just message us.\n\nAnything else?",
+      'price': "💰 Services & Pricing:\n\n💇 Haircut — $45\n🎨 Color — $85+ (consultation rec'd)\n💅 Manicure — $35\n🧖 Facial — $60\n💆 Massage — $75 (60 min)\n\nNew clients: 15% off first visit!",
+      'hours': "⏰ Hours:\nTue-Sat: 9am-7pm\nSun-Mon: Closed\n\nWalk-ins welcome. Appointments recommended on weekends.",
+    },
+  },
+  handyman: {
+    name: "FixIt Handyman",
+    avatar: '🔧',
+    flows: {
+      default: "FixIt Handyman here! 🔧\n\nWhat do you need fixed?\n\n🔨 General Repair\n🔌 Electrical\n🚰 Plumbing\n🎨 Painting\n📋 Get Quote",
+      'general': "General repair — got it!\n\nCan you describe the issue briefly?\n\n(Just type a quick description)",
+      'electrical': "🔌 Electrical work — note: we handle minor electrical only (outlets, switches, fixtures).\n\nWhat's the issue? Describe it briefly.",
+      'plumbing': "🚰 Plumbing — what's going on?\n\nLeaky faucet? Clogged drain? Running toilet?\n\nDescribe it and I'll estimate.",
+      'quote': "📋 For a detailed quote, I'll need:\n\n1. Type of work (repair/plumbing/electrical/etc)\n2. Brief description\n3. Your zip code\n\nType all 3 and we'll get you an estimate!",
+    },
+    afterDesc: (desc) => `Thanks! Based on "${desc.slice(0,40)}...", here's an estimate:\n\n💰 $75-$150 (typical range)\n⏱ Same-day service available\n\nWould you like to book?\n\n✅ Yes, send a pro\n📞 Call me instead`,
+    confirm: () => "Pro dispatched! 🚐\n\nETA: 2-3 hours. You'll get a text when they're on the way.\n\nService #" + Math.floor(Math.random()*90000+10000) + "\n\nNeed to cancel? Reply CANCEL anytime.",
+  },
+  clinic: {
+    name: "Wellness Medical Clinic",
+    avatar: '🏥',
+    flows: {
+      default: "Welcome to Wellness Medical Clinic 🏥\n\nHow can we help today?\n\n📅 Book Appointment\n💊 Rx Refill\n📋 Test Results\n⏰ Hours\n🚨 Urgent Care",
+      'appointment': "📅 What type of visit?\n\n🩺 General Check-up\n🤧 Sick Visit\n🩸 Lab Work\n💉 Vaccination",
+      'refill': "💊 To refill a prescription:\n\nPlease provide:\n1. Your full name\n2. Medication name\n3. Pharmacy name & location\n\n(Type these and we'll process your refill)",
+      'results': "📋 Test results are available via our patient portal.\n\nIf you need to speak with a nurse about results, type your name and which test.\n\nFor emergency results: call 911.",
+      'hours': "⏰ Hours:\nMon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed\n\n🚨 Urgent Care: Mon-Fri 8am-8pm\n\nAfter hours: call 911 or visit nearest ER.",
+    },
+  },
+};
+
+let currentBiz = 'pizza';
+let conversationState = { lastItem: null, waitingForQty: false, waitingDesc: false, biz: 'pizza' };
+
+function switchBusiness(biz) {
+  currentBiz = biz;
+  conversationState = { lastItem: null, waitingForQty: false, waitingDesc: false, biz };
+  document.getElementById('botName').textContent = businesses[biz].name;
+  document.getElementById('botAvatar').textContent = businesses[biz].avatar;
+  document.getElementById('chat').innerHTML = '';
+  document.querySelectorAll('.flow-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.flow-item[onclick*="${biz}"]`).classList.add('active');
+  addBotMsg(businesses[biz].flows.default);
+}
+
+function addMsg(text, cls) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = `msg ${cls}`;
+  div.innerHTML = text.replace(/\n/g, '<br>');
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  div.appendChild(time);
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addBotMsg(text) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg msg-bot';
+
+  // Check for quick reply buttons in the text
+  const lines = text.split('\n');
+  const quickBtns = lines.filter(l => l.match(/^[📋🛒⏰📍💇💰📅💊🩺🚨🔧🔌🚰🎨📅🌅☀️🌙🏠🚶✅❌📞]/));
+  const mainText = lines.filter(l => !l.match(/^[📋🛒⏰📍💇💰📅💊🩺🚨🔧🔌🚰🎨📅🌅☀️🌙🏠🚶✅❌📞]/)).join('<br>');
+
+  div.innerHTML = mainText;
+
+  if (quickBtns.length) {
+    const btnDiv = document.createElement('div');
+    btnDiv.className = 'quick';
+    for (const btn of quickBtns) {
+      const b = document.createElement('button');
+      b.className = 'quick-btn';
+      b.textContent = btn;
+      b.onclick = function() { sendQuick(btn); };
+      btnDiv.appendChild(b);
+    }
+    div.appendChild(btnDiv);
+  }
+
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  div.appendChild(time);
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function sendQuick(text) {
+  addMsg(text, 'msg-out');
+  processMessage(text.toLowerCase());
+}
+
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMsg(text, 'msg-out');
+  processMessage(text.toLowerCase());
+}
+
+function processMessage(msg) {
+  const biz = businesses[currentBiz];
+  const state = conversationState;
+
+  // Quantity waiting
+  if (state.waitingForQty) {
+    const qty = parseInt(msg);
+    if (qty >= 1 && qty <= 20) {
+      state.waitingForQty = false;
+      addBotMsg(biz.afterQty ? biz.afterQty(qty, state.lastItem) : `Got it — ${qty}. Confirming...`);
+      return;
+    }
+  }
+
+  // Confirm order
+  if (msg.includes('yes') && state.lastItem) {
+    addBotMsg(biz.confirm ? biz.confirm() : 'Confirmed! ✅');
+    state.lastItem = null;
+    return;
+  }
+
+  // Cancel
+  if (msg.includes('cancel') || msg.includes('no')) {
+    addBotMsg('No problem! Let me know if you need anything else. 👋');
+    state.lastItem = null;
+    state.waitingForQty = false;
+    return;
+  }
+
+  // Description waiting (handyman style)
+  if (state.waitingDesc) {
+    state.waitingDesc = false;
+    addBotMsg(biz.afterDesc ? biz.afterDesc(msg) : `Thanks for the description! We'll get back to you shortly.`);
+    return;
+  }
+
+  // Match against flows
+  const flows = biz.flows;
+  let matched = false;
+
+  for (const [key, response] of Object.entries(flows)) {
+    if (msg.includes(key)) {
+      if (['1','2','3','4','5'].includes(key)) {
+        state.lastItem = key;
+        state.waitingForQty = true;
+      }
+      if (['general','electrical','plumbing'].includes(key)) {
+        state.waitingDesc = true;
+      }
+      addBotMsg(response);
+      matched = true;
+      break;
+    }
+  }
+
+  // Fuzzy match for order-related queries and common intents
+  if (!matched) {
+    if (msg.match(/order|buy|purchase|want|get/i)) {
+      const orderFlow = biz.flows['order'] || biz.flows['book'] || "Sure! What would you like?\nType 'menu' for options.";
+      addBotMsg(orderFlow);
+    } else if (msg.match(/menu|price|pricing|cost|how much/i)) {
+      const price = biz.flows['menu'] || biz.flows['price'] || biz.flows['default'];
+      addBotMsg(price);
+    } else if (msg.match(/hour|open|close|when/i)) {
+      addBotMsg(biz.flows['hours'] || biz.flows['default']);
+    } else if (msg.match(/where|location|address|direction/i)) {
+      addBotMsg(biz.flows['location'] || biz.flows['default']);
+    } else if (msg.match(/address|street|zip|live at/i) && state.lastItem) {
+      // Delivery address flow
+      addBotMsg("Got your address! 📍 Order confirmed. We'll send a confirmation text.\n\nTotal: $18.99 (including delivery)\nETA: 25-35 min\n\nOrder #" + Math.floor(Math.random()*9000+1000));
+      state.lastItem = null;
+    } else {
+      // Generic response
+      addBotMsg("I'm an automated bot 🤖\n\nI can help with: orders, menus, hours, and locations.\n\nIn the Pro version, I connect to the real WhatsApp API and log orders to Google Sheets.\n\nType 'menu' for options!");
+    }
+  }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Init
+addBotMsg(businesses.pizza.flows.default);
+</script>
+</body>
+</html>

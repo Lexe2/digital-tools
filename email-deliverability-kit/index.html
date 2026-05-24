@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Deliverability Kit — Audit & Fix Your Email Setup</title>
+<style>
+  :root {
+    --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+    --text: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
+    --accent: #dc2626; --accent-hover: #b91c1c; --green: #16a34a; --amber: #d97706;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 960px; margin: 0 auto; }
+
+  header { text-align: center; padding: 32px 0 20px; }
+  header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 4px; }
+
+  .checker {
+    display: flex; gap: 8px; margin-bottom: 24px; justify-content: center; flex-wrap: wrap;
+  }
+  .checker input {
+    padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius);
+    font-size: 0.95rem; width: 320px; font-family: inherit;
+  }
+  .checker input:focus { outline: none; border-color: var(--accent); }
+  .checker button {
+    padding: 10px 24px; background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius); font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  }
+  .checker button:hover { background: var(--accent-hover); }
+
+  .results { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .dns-card {
+    background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center;
+  }
+  .dns-card.pass { border-color: var(--green); background: #f0fdf4; }
+  .dns-card.fail { border-color: var(--accent); background: #fef2f2; }
+  .dns-card.warn { border-color: var(--amber); background: #fffbeb; }
+  .dns-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .dns-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .dns-card .status-badge { font-size: 0.85rem; font-weight: 700; margin: 6px 0; }
+  .dns-card .detail { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; max-height: 100px; overflow-y: auto; }
+
+  .score-section { text-align: center; margin-bottom: 24px; }
+  .score-circle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 100px; height: 100px; border-radius: 50%; font-size: 2.2rem; font-weight: 800;
+    border: 4px solid; margin-bottom: 8px;
+  }
+  .score-good { border-color: var(--green); color: var(--green); background: #f0fdf4; }
+  .score-warn { border-color: var(--amber); color: var(--amber); background: #fffbeb; }
+  .score-bad { border-color: var(--accent); color: var(--accent); background: #fef2f2; }
+  .score-label { font-size: 0.85rem; color: var(--text-secondary); }
+
+  .warmup { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 24px; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  .panel-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.85rem;
+    display: flex; justify-content: space-between;
+  }
+  .panel-body { padding: 14px; font-size: 0.82rem; max-height: 400px; overflow-y: auto; }
+
+  .warmup-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .warmup-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--border); font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+  .warmup-table td { padding: 5px 8px; border-bottom: 1px solid #f0f1f3; }
+  .warmup-table .bar { height: 20px; border-radius: 3px; display: inline-block; min-width: 30px; text-align: center; font-size: 0.68rem; color: #fff; font-weight: 600; line-height: 20px; }
+
+  .checklist { list-style: none; }
+  .checklist li { padding: 6px 0; border-bottom: 1px solid #f0f1f3; font-size: 0.8rem; display: flex; align-items: flex-start; gap: 8px; }
+  .checklist .check { color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+  .upgrade-banner {
+    background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff;
+    padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 16px;
+  }
+  .upgrade-banner h3 { margin-bottom: 6px; }
+  .upgrade-banner p { font-size: 0.85rem; opacity: 0.9; margin-bottom: 12px; }
+  .btn-white { background: #fff; color: var(--accent); padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; }
+
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: var(--text);
+    color: #fff; padding: 12px 20px; border-radius: var(--radius);
+    font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) {
+    .results { grid-template-columns: 1fr; }
+    .warmup { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>Email <span>Deliverability</span> Kit</h1>
+  <p>Audit your DNS setup, get a deliverability score, and follow a proven warmup schedule.</p>
+</header>
+
+<div class="checker">
+  <input type="text" id="domainInput" placeholder="Enter your domain (e.g., mycompany.com)" value="example.com" onkeydown="if(event.key==='Enter')runAudit()">
+  <button onclick="runAudit()">Run Audit</button>
+</div>
+
+<div class="score-section" id="scoreSection" style="display:none;">
+  <div class="score-circle" id="scoreCircle">--</div>
+  <div class="score-label" id="scoreLabel">Enter a domain and click Run Audit</div>
+</div>
+
+<div class="results" id="dnsResults"></div>
+
+<div class="warmup">
+  <div class="panel">
+    <div class="panel-header"><span>📅 30-Day Warmup Schedule</span><span style="font-size:0.7rem;color:var(--text-muted);">Start slow, increase daily</span></div>
+    <div class="panel-body" id="warmupSchedule"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span>✅ Pre-Launch Checklist</span><span style="font-size:0.7rem;color:var(--text-muted);">Complete before sending</span></div>
+    <div class="panel-body">
+      <ul class="checklist" id="checklist"></ul>
+    </div>
+  </div>
+</div>
+
+<div class="upgrade-banner">
+  <h3>Pro: Automated DNS Monitoring & Setup Scripts</h3>
+  <p>The Pro version includes real DNS lookups, automated warmup scheduling, spam score testing against Mail-Tester API, and deployable setup scripts. The demo simulates checks — Pro connects to live DNS.</p>
+  <button class="btn-white" onclick="alert('Pro version: $67 one-time. Includes live DNS lookups, Mail-Tester integration, and automated SPF/DKIM/DMARC setup scripts for your server.')">Get Pro — $67</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ── Simulated DNS check (Pro uses real DNS queries) ──
+function simulateDNSCheck(domain) {
+  // Deterministic simulation based on domain name
+  const hash = domain.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const seeded = (n) => (hash * n * 7) % 100;
+  
+  const spfScore = seeded(domain.length);
+  const dkimScore = seeded(domain.length + 3);
+  const dmarcScore = seeded(domain.length + 7);
+  
+  return {
+    spf: {
+      exists: spfScore > 20,
+      record: spfScore > 20 ? 'v=spf1 include:_spf.google.com include:mailgun.org ~all' : null,
+      issues: spfScore <= 20 ? ['No SPF record found', 'Add SPF to prevent spoofing'] :
+              spfScore < 60 ? ['SPF exists but uses ~all (softfail) instead of -all (hardfail)'] : [],
+      status: spfScore > 60 ? 'pass' : spfScore > 20 ? 'warn' : 'fail',
+    },
+    dkim: {
+      exists: dkimScore > 25,
+      record: dkimScore > 25 ? 'google._domainkey TXT v=DKIM1; k=rsa; p=MIGfMA0G...' : null,
+      issues: dkimScore <= 25 ? ['No DKIM record found', 'Set up DKIM signing in your email provider'] :
+              dkimScore < 50 ? ['DKIM key is 1024-bit. Recommend 2048-bit for better security.'] : [],
+      status: dkimScore > 50 ? 'pass' : dkimScore > 25 ? 'warn' : 'fail',
+    },
+    dmarc: {
+      exists: dmarcScore > 30,
+      record: dmarcScore > 30 ? 'v=DMARC1; p=quarantine; rua=mailto:dmarc@' + domain : null,
+      issues: dmarcScore <= 30 ? ['No DMARC record found', 'DMARC is critical for domain reputation'] :
+              dmarcScore < 70 ? ['DMARC policy is p=quarantine. For full protection, use p=reject.'] : [],
+      status: dmarcScore > 70 ? 'pass' : dmarcScore > 30 ? 'warn' : 'fail',
+    },
+    score: Math.round(( (spfScore > 20 ? (spfScore > 60 ? 100 : 60) : 0) +
+                        (dkimScore > 25 ? (dkimScore > 50 ? 100 : 60) : 0) +
+                        (dmarcScore > 30 ? (dmarcScore > 70 ? 100 : 60) : 0) ) / 3),
+    recommendations: [],
+  };
+}
+
+function runAudit() {
+  const domain = document.getElementById('domainInput').value.trim();
+  if (!domain) return toast('Enter a domain first.');
+  if (!domain.includes('.')) return toast('Enter a valid domain (e.g., mycompany.com).');
+
+  const results = simulateDNSCheck(domain);
+
+  // Render DNS cards
+  const cards = [
+    { key: 'spf', label: 'SPF', icon: '🛡', data: results.spf },
+    { key: 'dkim', label: 'DKIM', icon: '🔑', data: results.dkim },
+    { key: 'dmarc', label: 'DMARC', icon: '📋', data: results.dmarc },
+  ];
+
+  let html = '';
+  for (const c of cards) {
+    const emoji = c.data.status === 'pass' ? '✅' : c.data.status === 'warn' ? '⚠️' : '❌';
+    html += `<div class="dns-card ${c.data.status}">
+      <div class="icon">${c.icon}</div>
+      <h3>${c.label}</h3>
+      <div class="status-badge">${emoji} ${c.data.status.toUpperCase()}</div>
+      <div class="detail">
+        ${c.data.record ? `<strong>Record:</strong><br><code style="font-size:0.7rem;">${c.data.record}</code><br>` : '<em>No record found</em><br>'}
+        ${c.data.issues.map(i => `⚠ ${i}<br>`).join('')}
+      </div>
+    </div>`;
+  }
+  document.getElementById('dnsResults').innerHTML = html;
+
+  // Score
+  const score = results.score;
+  const scoreEl = document.getElementById('scoreCircle');
+  const scoreLabel = document.getElementById('scoreLabel');
+  scoreEl.textContent = score;
+  scoreEl.className = 'score-circle ' + (score >= 80 ? 'score-good' : score >= 50 ? 'score-warn' : 'score-bad');
+  scoreLabel.textContent = score >= 80 ? 'Great deliverability setup. Your emails should land in inboxes.' :
+                           score >= 50 ? 'Decent setup but missing key protections. Fix warnings to avoid spam folders.' :
+                           'Critical gaps. Your emails are likely going to spam. Fix the failures immediately.';
+  document.getElementById('scoreSection').style.display = 'block';
+
+  // Warmup schedule
+  generateWarmupSchedule();
+  generateChecklist(results);
+
+  toast('✅ Audit complete. Score: ' + score + '/100');
+}
+
+function generateWarmupSchedule() {
+  const schedule = [
+    { day: '1-3', emails: '5/day', pct: 5, note: 'Warm up with known contacts only' },
+    { day: '4-7', emails: '10/day', pct: 10, note: 'Add colleagues and friends' },
+    { day: '8-10', emails: '20/day', pct: 18, note: 'Start adding real recipients slowly' },
+    { day: '11-14', emails: '35/day', pct: 30, note: 'Monitor bounce rate (keep under 2%)' },
+    { day: '15-18', emails: '50/day', pct: 42, note: 'Increase gradually' },
+    { day: '19-22', emails: '75/day', pct: 60, note: 'Check spam placement daily' },
+    { day: '23-26', emails: '100/day', pct: 78, note: 'Reply rates should be visible now' },
+    { day: '27-30', emails: '150/day', pct: 95, note: 'Full sending capacity reached' },
+  ];
+
+  let html = '<table class="warmup-table"><thead><tr><th>Days</th><th>Sending Limit</th><th>Capacity</th><th>Notes</th></tr></thead><tbody>';
+  for (const row of schedule) {
+    const color = row.pct < 20 ? '#ef4444' : row.pct < 50 ? '#f59e0b' : row.pct < 80 ? '#3b82f6' : '#16a34a';
+    html += `<tr>
+      <td><strong>Day ${row.day}</strong></td>
+      <td>${row.emails}</td>
+      <td><span class="bar" style="width:${row.pct}%;background:${color};">${row.pct}%</span></td>
+      <td style="font-size:0.73rem;color:var(--text-secondary);">${row.note}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('warmupSchedule').innerHTML = html;
+}
+
+function generateChecklist(results) {
+  const items = [
+    { done: results.spf.status === 'pass', text: 'SPF record configured and validated' },
+    { done: results.dkim.status === 'pass', text: 'DKIM signing enabled (2048-bit recommended)' },
+    { done: results.dmarc.status === 'pass', text: 'DMARC policy set to p=reject' },
+    { done: false, text: 'Custom tracking domain set up (not shared)' },
+    { done: false, text: 'Warmup completed (30-day schedule above)' },
+    { done: false, text: 'Mailbox not a free email (no @gmail.com sender)' },
+    { done: false, text: 'List cleaned — removed invalid/inactive emails' },
+    { done: false, text: 'Unsubscribe link present in every email' },
+    { done: false, text: 'Spam words removed from subject lines' },
+    { done: false, text: 'Tested against Mail-Tester (score 9+/10)' },
+  ];
+
+  const el = document.getElementById('checklist');
+  el.innerHTML = items.map(i => `
+    <li>
+      <span class="check">${i.done ? '☑' : '☐'}</span>
+      <span style="${i.done ? 'text-decoration:line-through;color:var(--green);' : ''}">${i.text}</span>
+    </li>
+  `).join('');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Run demo on load ──
+runAudit();
+</script>
+</body>
+</html>

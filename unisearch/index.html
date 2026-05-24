@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniSearch — Unified Workspace Search</title>
+<style>
+:root{--bg:#0a0f16;--surface:#111821;--border:#1e293b;--text:#e2e8f0;--muted:#8899aa;--accent:#8b5cf6;--accent2:#06b6d4;--green:#22c55e;--radius:8px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;padding:20px;max-width:900px;margin:0 auto}
+h1{font-size:1.4rem;margin-bottom:4px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:.85rem;margin-bottom:20px}
+
+.search-bar{display:flex;gap:10px;margin-bottom:20px}
+.search-bar input{flex:1;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:1rem}
+.search-bar input:focus{outline:none;border-color:var(--accent)}
+.search-bar button{padding:14px 28px;border-radius:var(--radius);font-weight:700;font-size:.9rem;cursor:pointer;border:none;background:var(--accent);color:#fff}
+
+.sources{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.source{padding:6px 14px;border-radius:var(--radius);font-size:.8rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--muted);transition:all .15s}
+.source.active{border-color:var(--accent);color:var(--accent);background:rgba(139,92,246,.1)}
+.source .count{color:var(--muted);font-weight:400;margin-left:4px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.stat .val{font-size:1.3rem;font-weight:700}
+.stat .lbl{font-size:.7rem;color:var(--muted);margin-top:2px}
+
+.results{margin-bottom:20px}
+.result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start}
+.result .icon{font-size:1.3rem;flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:var(--radius)}
+.result .body{flex:1;min-width:0}
+.result .title{font-weight:600;font-size:.9rem;margin-bottom:4px}
+.result .snippet{font-size:.8rem;color:var(--muted);line-height:1.5}
+.result .meta{font-size:.75rem;color:var(--muted);margin-top:6px;display:flex;gap:12px}
+.result .source-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600}
+.tag-email{background:rgba(139,92,246,.15);color:var(--accent)}
+.tag-doc{background:rgba(6,182,212,.15);color:var(--accent2)}
+.tag-meeting{background:rgba(34,197,94,.15);color:var(--green)}
+.tag-slack{background:rgba(245,158,11,.15);color:#f59e0b}
+
+.upsell{background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(6,182,212,.04));border:1px solid var(--accent);border-radius:var(--radius);padding:24px;text-align:center;margin-top:20px}
+.upsell h3{margin-bottom:8px}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:none}
+
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.result{flex-direction:column}}
+
+/* Typing simulation */
+@keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<h1>Uni<span>Search</span></h1>
+<div class="sub">Query across your emails, docs, meetings, and Slack — in one search bar. Validated on r/automation. Free demo with simulated workspace data.</div>
+
+<div class="search-bar">
+  <input type="text" id="query" placeholder="Search emails, docs, meetings, messages..." onkeydown="if(event.key==='Enter')search()" autofocus>
+  <button onclick="search()">Search</button>
+</div>
+
+<div class="sources" id="sources">
+  <div class="source active" onclick="toggleSource('email')">📧 Email<span class="count">14</span></div>
+  <div class="source active" onclick="toggleSource('docs')">📄 Docs<span class="count">9</span></div>
+  <div class="source active" onclick="toggleSource('meetings')">🎥 Meetings<span class="count">6</span></div>
+  <div class="source active" onclick="toggleSource('slack')">💬 Slack<span class="count">11</span></div>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat"><div class="val" style="color:var(--accent)">40</div><div class="lbl">Sources Indexed</div></div>
+  <div class="stat"><div class="val">0.4s</div><div class="lbl">Avg Query Time</div></div>
+  <div class="stat"><div class="val" style="color:var(--green)">18</div><div class="lbl">Recent items</div></div>
+  <div class="stat"><div class="val">7d</div><div class="lbl">Demo scope</div></div>
+</div>
+
+<div class="results" id="results">
+  <p style="color:var(--muted);text-align:center;padding:40px">Type a query above — try "Q3 budget", "API outage", or "onboarding doc"</p>
+</div>
+
+<div class="upsell">
+  <h3>Pro: Real Gmail + Google Drive + Slack + Notion Connections — $59</h3>
+  <p>Connect your actual accounts. Real-time indexing. Cross-source relevance scoring. One-time purchase. No subscription.</p>
+  <button class="btn primary" style="display:inline-block;margin-top:12px;padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-weight:700;font-size:.9rem;cursor:pointer">Get Pro — $59</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEMO_DATA = [
+  {type:'email',title:'Q3 Budget Review — Please review by Friday',snippet:'The Q3 budget has been updated with the new headcount projections. Marketing is up 12%, Engineering is flat. Finance wants us to find $50K in savings before the board meeting on Friday.',date:'2h ago',from:'Sarah Chen, CFO',source:'email'},
+  {type:'email',title:'Re: API outage this morning — root cause analysis',snippet:'The API outage was caused by a connection pool exhaustion in the payment service. We deployed a hotfix at 11:32am. Full RCA document attached. Monitoring shows all systems nominal since 12:15pm.',date:'5h ago',from:'DevOps Team',source:'email'},
+  {type:'email',title:'Client onboarding: Acme Corp — kickoff deck',snippet:'Attached is the kickoff deck for Acme Corp onboarding. Key dates: technical audit June 10, data migration June 17, go-live July 1. Please review the scope document and flag any concerns.',date:'1d ago',from:'Maria Santos, Solutions',source:'email'},
+  {type:'email',title:'Budget approval needed — $15K for new monitoring tools',snippet:'We need budget approval for the Datadog APM upgrade. Currently spending $3,200/month on the Pro tier. The Enterprise tier at $4,800 adds anomaly detection, custom metrics, and 30-day retention. ROI: caught 2 incidents last month that cost us ~$25K in downtime.',date:'2d ago',from:'Alex Kim, Engineering',source:'email'},
+  {type:'docs',title:'Engineering Runbook — Incident Response v3.2',snippet:'1. Acknowledge alert within 5 minutes. 2. Declare severity (SEV1-SEV4). 3. Create incident channel in Slack. 4. Assign incident commander. 5. If SEV1, page on-call immediately. 6. Post status updates every 30 minutes. 7. Blameless postmortem within 48 hours of resolution.',date:'3d ago',from:'Google Docs',source:'docs'},
+  {type:'docs',title:'Q3 OKRs — Company-Wide',snippet:'Objective 1: Launch v3 of API platform (KR: 99.9% uptime). Objective 2: Close 20 enterprise deals (KR: $2M new ARR). Objective 3: Reduce customer churn to under 3% (KR: NPS > 50). Objective 4: Hire 5 senior engineers (KR: offer acceptance > 80%).',date:'1w ago',from:'Notion',source:'docs'},
+  {type:'docs',title:'Onboarding Guide — New Engineers',snippet:'Week 1: Set up dev environment, pair with buddy, ship first PR. Week 2: Own a small feature end-to-end. Week 3: Join on-call shadow rotation. Week 4: Present something you learned at engineering all-hands.',date:'2w ago',from:'Notion',source:'docs'},
+  {type:'docs',title:'Product Spec — Unified Search v1',snippet:'Problem: Engineers spend 4.3 hours/week searching across tools. Solution: Single search bar indexing Gmail, Drive, Slack, Notion, Jira, Confluence. Scope: Phase 1 = Gmail + Drive + Slack. Architecture: Elasticsearch index, OAuth connectors, relevance scoring via BM25 + vector embeddings.',date:'1w ago',from:'Google Docs',source:'docs'},
+  {type:'meeting',title:'Weekly All-Hands — June 2, 2026',snippet:'Agenda: Q2 results review (revenue $4.2M, +18% QoQ), Acme onboarding timeline, engineering hiring update (3 offers accepted), API platform v3 launch date confirmed for July 15. Action items: Maria to send Acme timeline by EOD, Alex to finalize monitoring budget.',date:'3d ago',from:'Zoom Recording',source:'meeting'},
+  {type:'meeting',title:'Customer Success Sync — Churn Analysis',snippet:'Top churn reasons: (1) missing SSO in Basic tier (23% of churn), (2) slow API responses during peak (17%), (3) lack of audit logs for SOC2 (14%). Recommended actions: Add SSO to all tiers, optimize API caching, ship SOC2 audit log export by July.',date:'5d ago',from:'Google Meet',source:'meeting'},
+  {type:'meeting',title:'Product Review — Unified Search Demo',snippet:'Demoed v0.3 of unified search. Cross-source queries working for Gmail + Drive. Slack connector in progress. Search latency: 0.3s avg (target: <0.5s). Relevance scoring needs tuning — email results dominating doc results. Ship to internal beta by June 15.',date:'1w ago',from:'Google Meet',source:'meeting'},
+  {type:'slack',title:'#engineering — API latency spike',snippet:'@channel seeing p99 latency at 2.3s on /api/v1/search. Started at 14:22 UTC. Investigation underway. Rolling back to previous deployment. Update in 15.',date:'6h ago',from:'#engineering',source:'slack'},
+  {type:'slack',title:'#general — Welcome new hires!',snippet:'Please welcome our 3 new engineers starting today: Priya (backend), Marcus (frontend), and Chen (ML). Their buddies are assigned — check the #onboarding channel for details. First day lunch at 12pm in the kitchen!',date:'2d ago',from:'#general',source:'slack'},
+  {type:'slack',title:'#sales — Acme Corp deal closed!',snippet:'Just got the signed contract from Acme Corp! $180K ARR, 2-year term. Big thanks to engineering for the custom SSO build and Maria for the 6-month nurture. Celebrating at 4pm today — drinks on me!',date:'3d ago',from:'#sales',source:'slack'},
+  {type:'slack',title:'#product — Budget tool request',snippet:'Anyone know a good tool for tracking department budgets? Spreadsheets are becoming a nightmare with all these reorgs. Need something that shows actuals vs planned by month. Budget under $50/month ideally.',date:'4d ago',from:'#product',source:'slack'},
+];
+
+let activeSources = ['email','docs','meetings','slack'];
+
+function toggleSource(src){
+  const idx = activeSources.indexOf(src);
+  if(idx>=0) activeSources.splice(idx,1);
+  else activeSources.push(src);
+  document.querySelectorAll('.source').forEach(s=>{
+    const type = s.textContent.includes('Email')?'email':s.textContent.includes('Docs')?'docs':s.textContent.includes('Meeting')?'meetings':s.textContent.includes('Slack')?'slack':'';
+    s.classList.toggle('active', activeSources.includes(type));
+  });
+  search();
+}
+
+function search(){
+  const q = (document.getElementById('query').value||'').toLowerCase();
+  if(!q){renderResults(DEMO_DATA);updateStats(DEMO_DATA);return}
+  
+  const filtered = DEMO_DATA.filter(d=>{
+    if(!activeSources.includes(d.source)) return false;
+    const text = `${d.title} ${d.snippet} ${d.from||''}`.toLowerCase();
+    return text.includes(q);
+  });
+  
+  renderResults(filtered);
+  updateStats(filtered);
+}
+
+function renderResults(data){
+  const container = document.getElementById('results');
+  if(!data.length){
+    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px">No results found. Try a different query.</p>';
+    return;
+  }
+  
+  const icons = {email:'📧',docs:'📄',meeting:'🎥',slack:'💬'};
+  const tagClass = {email:'tag-email',docs:'tag-doc',meeting:'tag-meeting',slack:'tag-slack'};
+  const sourceNames = {email:'Email',docs:'Doc',meeting:'Meeting',slack:'Slack'};
+  
+  container.innerHTML = data.map((d,i)=>`
+    <div class="result" style="animation:fadeIn ${0.1+i*0.05}s ease">
+      <div class="icon">${icons[d.source]}</div>
+      <div class="body">
+        <div class="title">${highlightMatch(d.title, document.getElementById('query').value)}</div>
+        <div class="snippet">${highlightMatch(d.snippet, document.getElementById('query').value)}</div>
+        <div class="meta">
+          <span class="source-tag ${tagClass[d.source]}">${sourceNames[d.source]}</span>
+          <span>${d.date}</span>
+          ${d.from?`<span>${d.from}</span>`:''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function highlightMatch(text, query){
+  if(!query||query.length<2) return text.slice(0,200);
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`,'gi');
+  return text.slice(0,200).replace(re, '<mark style="background:rgba(139,92,246,.3);color:var(--text);padding:0 2px;border-radius:3px">$1</mark>');
+}
+
+function updateStats(data){
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="val" style="color:var(--accent)">${data.length}</div><div class="lbl">Results Found</div></div>
+    <div class="stat"><div class="val">${data.length>0?'0.3':'0'}s</div><div class="lbl">Query Time</div></div>
+    <div class="stat"><div class="val" style="color:var(--green)">${data.filter(d=>activeSources.includes(d.source)).length}</div><div class="lbl">Active Sources</div></div>
+    <div class="stat"><div class="val">7d</div><div class="lbl">Demo Scope</div></div>
+  `;
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+// Initial render
+renderResults(DEMO_DATA);
+</script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Invoice Extractor — Extract Data from PDF Invoices</title>
+<style>
+  :root {
+    --bg: #f8f9fc; --surface: #fff; --border: #dee2ea;
+    --text: #1a1d26; --text-secondary: #5c6578; --text-muted: #8b93a5;
+    --accent: #0891b2; --accent-hover: #0e7490; --green: #059669;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 960px; margin: 0 auto; }
+
+  header { text-align: center; padding: 36px 0 24px; }
+  header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); margin-top: 4px; }
+
+  .dropzone {
+    background: var(--surface); border: 2px dashed var(--border); border-radius: 12px;
+    padding: 40px; text-align: center; cursor: pointer; margin-bottom: 20px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: #f0f9ff; }
+  .dropzone .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .dropzone p { color: var(--text-secondary); font-size: 0.9rem; }
+  .dropzone .small { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .panel-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between;
+  }
+  .panel-body { padding: 14px; max-height: 400px; overflow-y: auto; font-size: 0.82rem; }
+
+  .raw-text { white-space: pre-wrap; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+  .field-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f1f3; }
+  .field-row .label { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field-row .value { font-weight: 600; text-align: right; }
+
+  .line-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .line-table th { text-align: left; padding: 7px 8px; border-bottom: 2px solid var(--border); font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .line-table td { padding: 6px 8px; border-bottom: 1px solid #f0f1f3; }
+  .line-table .num { text-align: right; }
+
+  .toolbar { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 22px; border-radius: 6px; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; border: none; transition: background 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f5f6f9; }
+
+  .sample-section { text-align: center; margin: 16px 0; }
+  .sample-section button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.85rem; font-weight: 600; margin: 0 6px; }
+
+  .upgrade-banner {
+    background: linear-gradient(135deg, #0891b2, #06b6d4); color: #fff;
+    padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 16px;
+  }
+  .upgrade-banner h3 { font-size: 1.1rem; margin-bottom: 6px; }
+  .upgrade-banner p { font-size: 0.85rem; opacity: 0.9; margin-bottom: 12px; }
+  .btn-white { background: #fff; color: var(--accent); padding: 10px 22px; border-radius: 6px; font-size: 0.88rem; font-weight: 700; cursor: pointer; border: none; }
+
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: var(--text);
+    color: #fff; padding: 12px 20px; border-radius: var(--radius);
+    font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>PDF <span>Invoice Extractor</span></h1>
+  <p>Drop any PDF invoice. Get structured data in seconds. Export to CSV.</p>
+</header>
+
+<div class="dropzone" id="dropzone" onclick="loadSample()">
+  <div class="icon">📄</div>
+  <p><strong>Drop a PDF invoice here</strong> or click to load a sample</p>
+  <p class="small">Supports invoices from QuickBooks, Xero, Stripe, FreshBooks, and custom formats</p>
+</div>
+
+<div class="sample-section">
+  <span style="color:var(--text-muted);font-size:0.82rem;">Try a sample:</span>
+  <button onclick="loadSample(1)">QuickBooks Invoice</button>
+  <button onclick="loadSample(2)">Stripe Invoice</button>
+  <button onclick="loadSample(3)">Custom Freelance Invoice</button>
+</div>
+
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="exportCSV()">⬇ Export to CSV</button>
+  <button class="btn btn-outline" onclick="exportJSON()">⬇ Export JSON</button>
+  <button class="btn btn-outline" onclick="copyToClipboard()">📋 Copy All</button>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-header"><span>📄 Raw Text</span><span style="color:var(--text-muted);font-size:0.7rem;">Paste or auto-extracted</span></div>
+    <div class="panel-body">
+      <div class="raw-text" id="rawText">Load a sample or drop a PDF to begin...</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span>📊 Extracted Data</span><span id="statusBadge" style="font-size:0.7rem;color:var(--text-muted);">Ready</span></div>
+    <div class="panel-body" id="extractedData">
+      <p style="color:var(--text-muted);text-align:center;padding:20px;">Extracted fields will appear here</p>
+    </div>
+  </div>
+</div>
+
+<div class="upgrade-banner" id="upgrade">
+  <h3>Pro: Batch Process Unlimited Invoices</h3>
+  <p>This demo extracts one invoice at a time. The Pro version handles batches of 100+ PDFs, auto-detects vendor formats, and integrates with QuickBooks/Xero.</p>
+  <button class="btn-white" onclick="alert('Pro version: $79 one-time. Includes batch processing, format auto-detection, and accounting software export.')">Get Pro — $79</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ── Sample invoices ──
+const samples = {
+  1: {
+    raw: `INVOICE
+
+QuickBooks
+
+From:
+TechSolutions Inc.
+742 Innovation Drive, Suite 300
+Austin, TX 78701
+billing@techsolutions.com
+Tax ID: 45-1234567
+
+To:
+DataFlow Analytics
+1200 Market Street
+San Francisco, CA 94102
+accounts@dataflow.io
+
+Invoice #: INV-2026-0482
+Date: May 15, 2026
+Due Date: June 14, 2026
+Payment Terms: Net 30
+
+Description                     Qty   Rate      Amount
+Cloud Infrastructure Setup      1     5,000.00  5,000.00
+Data Migration Services         3     1,200.00  3,600.00
+API Integration Consulting      2     850.00    1,700.00
+Monthly Support Retainer        1     2,500.00  2,500.00
+
+Subtotal:                                       12,800.00
+Tax (8.25%):                                      1,056.00
+Total Due:                                       13,856.00
+
+Payment Instructions:
+Wire to: Chase Bank
+Account: 123456789
+Routing: 021000021
+Please include invoice number in payment reference.`,
+  },
+  2: {
+    raw: `STRIPE INVOICE
+
+Stripe, Inc.
+510 Townsend Street
+San Francisco, CA 94103
+
+Bill To:
+CloudPeak SaaS, Inc.
+Attn: Billing Department
+44 Montgomery St, Floor 18
+San Francisco, CA 94104
+
+Invoice Number: 2A3B-4C5D-6E7F
+Invoice Date: May 20, 2026
+Due Date: June 19, 2026
+
+Service Period: May 1 — May 31, 2026
+
+Item                              Qty   Unit Price   Amount
+─────────────────────────────────────────────────────────────
+Stripe Payments Processing Fee    1,247  $0.30        $374.10
+Stripe Connect Platform Fee       1      $2.00        $2.00
+Stripe Billing Subscription       1      $249.00      $249.00
+Stripe Tax Professional           1      $99.00       $99.00
+─────────────────────────────────────────────────────────────
+Subtotal                                             $724.10
+Sales Tax (CA 8.625%)                                 $62.45
+─────────────────────────────────────────────────────────────
+Amount Due (USD)                                     $786.55
+
+Pay online: https://dashboard.stripe.com/invoices/2A3B-4C5D-6E7F`,
+  },
+  3: {
+    raw: `INVOICE
+
+Sarah Mitchell — Freelance UX Designer
+sar@mitchelldesign.co
+Portland, OR 97214
+Tax ID: 12-3456789 (Sole Proprietor)
+
+Client:
+GreenLeaf Organics
+1420 NW Everett St
+Portland, OR 97209
+ap@greenleaforganics.com
+
+Invoice: SM-2026-0112
+Issued: May 18, 2026
+Due: June 17, 2026
+
+Services:
+Website Redesign — Homepage + Product Pages   1 project   $6,500.00
+Mobile App UX Audit                            1 project   $2,800.00
+User Testing Sessions (6 participants)         6 sessions   $350.00
+Design System Documentation                    1 deliverable $1,200.00
+
+                                                Subtotal: $12,600.00
+                                                Tax (0% — out of state): $0.00
+                                                Total: $12,600.00
+
+Notes:
+Payment via ACH preferred:
+Sarah Mitchell / Routing: 123000848 / Account: 987654321
+50% due on commencement, 50% on delivery. Thank you!`,
+  },
+};
+
+// ── Extraction engine ──
+function extractFields(text) {
+  const extractors = [
+    { field: 'invoice_number', patterns: [
+      /Invoice\s*(?:#|Number|No\.?|ID)?\s*[:.]?\s*([A-Za-z0-9\-]{3,30})/i,
+      /INV(?:OICE)?[- ]*(\d{3,6})/i,
+    ]},
+    { field: 'vendor_name', patterns: [
+      /^From:?\s*\n?\s*(.+?)(?:\n|$)/im,
+      /^([A-Z][A-Za-z\s&.,]{3,40}(?:Inc\.?|LLC|Ltd|Corp|GmbH|S\.A\.))\s*\n/m,
+      /(?:^|\n)([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3})\s*\n/,
+    ]},
+    { field: 'client_name', patterns: [
+      /(?:Bill To|Client|To):?\s*\n?\s*(.+?)(?:\n|$)/im,
+    ]},
+    { field: 'invoice_date', patterns: [
+      /(?:Invoice\s+)?Date:\s*([A-Z][a-z]+\s+\d{1,2},?\s*\d{4}|\d{4}[-/]\d{2}[-/]\d{2})/i,
+      /Issued:\s*([A-Z][a-z]+\s+\d{1,2},?\s*\d{4})/i,
+    ]},
+    { field: 'due_date', patterns: [
+      /(?:Due\s+Date|Payment\s+Due):\s*([A-Z][a-z]+\s+\d{1,2},?\s*\d{4}|\d{4}[-/]\d{2}[-/]\d{2})/i,
+      /Due:\s*([A-Z][a-z]+\s+\d{1,2},?\s*\d{4})/i,
+    ]},
+    { field: 'total_amount', patterns: [
+      /(?:Total(?:\s+Due|Amount)?|Amount\s+Due|Balance\s+Due)\s*(?:\(?USD\)?)?[:.]?\s*\$?([\d,]+\.?\d{0,2})/i,
+      /Total:\s*\$?([\d,]+\.?\d{0,2})/,
+    ]},
+    { field: 'subtotal', patterns: [
+      /Subtotal\s*[:.]?\s*\$?([\d,]+\.?\d{0,2})/i,
+    ]},
+    { field: 'tax_amount', patterns: [
+      /(?:Tax|Sales\s+Tax|VAT|GST|HST)\s*(?:\([^)]*\))?\s*[:.]?\s*\$?([\d,]+\.?\d{0,2})/i,
+    ]},
+    { field: 'email', patterns: [
+      /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
+    ]},
+  ];
+
+  const fields = {};
+  for (const ext of extractors) {
+    for (const pattern of ext.patterns) {
+      const match = text.match(pattern);
+      if (match) {
+        fields[ext.field] = match[1].trim();
+        break;
+      }
+    }
+  }
+
+  // Extract line items
+  const lines = text.split('\n');
+  const lineItems = [];
+  const itemPattern = /^(.+?)\s{2,}(\d+)\s{2,}\$?([\d,]+\.?\d{0,2})\s{2,}\$?([\d,]+\.?\d{0,2})/;
+
+  for (const line of lines) {
+    const match = line.match(itemPattern);
+    if (match && !match[1].match(/subtotal|total|tax/i)) {
+      lineItems.push({
+        description: match[1].trim(),
+        quantity: parseInt(match[2]),
+        rate: parseFloat(match[3].replace(',', '')),
+        amount: parseFloat(match[4].replace(',', '')),
+      });
+    }
+  }
+
+  // Second pass: looser pattern for invoice samples that use different spacing
+  if (!lineItems.length) {
+    const loosePattern = /^(.{10,60})\s+(\d+)\s+\$?([\d,]+\.\d{2})\s+\$?([\d,]+\.\d{2})/;
+    for (const line of lines) {
+      const match = line.match(loosePattern);
+      if (match && !match[1].match(/subtotal|total|tax|amount|due|invoice|date|service|item/i)) {
+        const desc = match[1].trim();
+        if (desc.length > 3 && /\d/.test(match[3])) {
+          lineItems.push({
+            description: desc,
+            quantity: parseInt(match[2]),
+            rate: parseFloat(match[3].replace(',', '')),
+            amount: parseFloat(match[4].replace(',', '')),
+          });
+        }
+      }
+    }
+  }
+
+  // Try parsing free-form item pattern for freelance-style invoices
+  if (!lineItems.length) {
+    const freePattern = /^(.{15,80})\s+([\d.]+)\s+(?:project[s]?|sessions[s]?|deliverable[s]?|hrs?)\s+\$?([\d,]+\.\d{2})/im;
+    let remaining = text;
+    let match;
+    while ((match = freePattern.exec(remaining)) !== null) {
+      const matchText = match[1].trim();
+      if (!matchText.match(/subtotal|total|tax|amount|due|note|payment/i)) {
+        lineItems.push({
+          description: matchText,
+          quantity: parseFloat(match[2]),
+          rate: parseFloat(match[3].replace(',', '')),
+          amount: parseFloat(match[2]) * parseFloat(match[3].replace(',', '')),
+        });
+      }
+      remaining = remaining.slice(match.index + match[0].length);
+    }
+  }
+
+  return { fields, lineItems };
+}
+
+// ── Render ──
+function renderResult(data) {
+  const { fields, lineItems } = data;
+  const fmt = (v) => { const n = parseFloat(v); return isNaN(n) ? v : '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2}); };
+  const hasData = Object.keys(fields).length > 0 || lineItems.length > 0;
+
+  document.getElementById('statusBadge').textContent = hasData ? '✓ Extracted' : 'No data found';
+  document.getElementById('statusBadge').style.color = hasData ? 'var(--green)' : 'var(--text-muted)';
+
+  let html = '';
+
+  if (Object.keys(fields).length > 0) {
+    const labels = {
+      invoice_number: 'Invoice #', vendor_name: 'Vendor', client_name: 'Client',
+      invoice_date: 'Date', due_date: 'Due Date', total_amount: 'Total',
+      subtotal: 'Subtotal', tax_amount: 'Tax', email: 'Email',
+    };
+    for (const [key, val] of Object.entries(fields)) {
+      html += `<div class="field-row"><span class="label">${labels[key] || key}</span><span class="value">${val}</span></div>`;
+    }
+  }
+
+  if (lineItems.length > 0) {
+    html += '<table class="line-table" style="margin-top:12px;"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th class="num">Amount</th></tr></thead><tbody>';
+    for (const item of lineItems) {
+      html += `<tr><td>${item.description}</td><td>${item.quantity}</td><td>${fmt(item.rate)}</td><td class="num">${fmt(item.amount)}</td></tr>`;
+    }
+    html += '</tbody></table>';
+  }
+
+  document.getElementById('extractedData').innerHTML = html || '<p style="color:var(--text-muted);text-align:center;padding:20px;">Could not extract structured data. Try a different format or paste the text manually.</p>';
+}
+
+function loadSample(n = 1) {
+  const sample = samples[n];
+  document.getElementById('rawText').textContent = sample.raw;
+  const data = extractFields(sample.raw);
+  window._lastExtracted = data;
+  renderResult(data);
+  toast('✅ Sample invoice loaded and extracted.');
+}
+
+// ── Export ──
+function exportCSV() {
+  const data = window._lastExtracted;
+  if (!data) return toast('Load a sample or extract data first.');
+
+  const { fields, lineItems } = data;
+  let csv = 'Field,Value\n';
+  for (const [k, v] of Object.entries(fields)) {
+    csv += `"${k}","${v}"\n`;
+  }
+  if (lineItems.length > 0) {
+    csv += '\nDescription,Quantity,Rate,Amount\n';
+    for (const item of lineItems) {
+      csv += `"${item.description}",${item.quantity},${item.rate},${item.amount}\n`;
+    }
+  }
+
+  downloadFile(csv, 'invoice-data.csv', 'text/csv');
+  toast('📥 CSV downloaded.');
+}
+
+function exportJSON() {
+  const data = window._lastExtracted;
+  if (!data) return toast('Load a sample or extract data first.');
+  const json = JSON.stringify(data, null, 2);
+  downloadFile(json, 'invoice-data.json', 'application/json');
+  toast('📥 JSON downloaded.');
+}
+
+function copyToClipboard() {
+  const data = window._lastExtracted;
+  if (!data) return toast('Load a sample first.');
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => toast('📋 Copied to clipboard.'));
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── Drag and drop ──
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+    return toast('⚠ Please drop a PDF file. For demo, use a sample invoice above.');
+  }
+  handlePDF(file);
+});
+
+function handlePDF(file) {
+  toast('📄 Reading PDF...');
+  const reader = new FileReader();
+  reader.onload = function() {
+    // In a full version, pdf.js would parse the binary. Here we show a text extraction demo.
+    document.getElementById('rawText').textContent = 
+      `[PDF binary loaded: ${file.name}, ${(file.size/1024).toFixed(1)} KB]\n\n` +
+      `In production (Pro version), the PDF gets parsed using pdf.js and text extracted.\n` +
+      `For now, try one of the sample invoices to see the extraction in action.`;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Load default ──
+loadSample(1);
+</script>
+</body>
+</html>

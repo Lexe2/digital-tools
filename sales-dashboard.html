@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Dashboard — Digital Products Revenue Tracker</title>
+<style>
+  :root {--bg: #0a0e15; --surface: #111827; --surface-raised: #1a2332; --border: #1e2d44; --text: #e8ecf2; --text-secondary: #8e9bb4; --text-muted: #556078; --accent: #6366f1; --green: #34d399; --amber: #f59e0b; --red: #ef4444; --cyan: #22d3ee; --radius: 8px;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 1300px; margin: 0 auto; }
+
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  header h1 { font-size: 1.3rem; font-weight: 700; }
+  header h1 span { color: var(--accent); }
+
+  .top-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
+  .tstat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 12px; text-align: center; }
+  .tstat .num { font-size: 1.5rem; font-weight: 700; }
+  .tstat .label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; }
+  .panel-body { padding: 14px; font-size: 0.8rem; max-height: 400px; overflow-y: auto; }
+
+  .sale-row { display: grid; grid-template-columns: 80px 1fr 80px 80px 1fr; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(30,45,68,0.3); font-size: 0.78rem; }
+  .sale-row .date { font-size: 0.7rem; color: var(--text-muted); font-family: 'SF Mono', monospace; }
+  .sale-row .product { font-weight: 600; }
+  .sale-row .price { font-family: 'SF Mono', monospace; color: var(--green); font-weight: 600; }
+  .sale-row .channel { font-size: 0.7rem; color: var(--cyan); }
+  .sale-row .remove-btn { color: var(--red); cursor: pointer; background: none; border: none; font-size: 0.8rem; text-align: right; }
+
+  .product-perf { display: grid; grid-template-columns: 1fr 60px 70px 70px 70px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(30,45,68,0.3); font-size: 0.76rem; }
+  .product-perf .prod-name { font-weight: 600; }
+  .product-perf .bar-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; flex: 1; }
+  .product-perf .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+  .product-perf .num { font-family: 'SF Mono', monospace; text-align: right; font-size: 0.72rem; }
+
+  .add-sale { display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; margin-top: 12px; }
+  .add-sale select, .add-sale input, .add-sale button { padding: 7px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--text); font-family: inherit; font-size: 0.78rem; }
+  .add-sale button { background: var(--accent); color: #fff; border: none; font-weight: 700; cursor: pointer; }
+  .add-sale button:hover { background: #4f46e5; }
+
+  .channel-bar { display: flex; gap: 0; height: 24px; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .channel-seg { display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; color: #fff; }
+  .ch-reddit { background: var(--red); }
+  .ch-direct { background: var(--accent); }
+  .ch-gumroad { background: var(--amber); }
+  .ch-organic { background: var(--green); }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: #0a0e15; padding: 12px 20px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 768px) { .split { grid-template-columns: 1fr; } .top-stats { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>Sales<span>Dashboard</span></h1>
+  <div style="display:flex;gap:8px;">
+    <button onclick="addSimSale()" style="background:var(--surface-raised);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.75rem;">+ Simulate Sale</button>
+    <button onclick="resetAll()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.75rem;">Reset</button>
+  </div>
+</header>
+
+<div class="top-stats">
+  <div class="tstat"><div class="num" style="color:var(--green);" id="statSales">0</div><div class="label">Sales Today</div></div>
+  <div class="tstat"><div class="num" style="color:var(--green);" id="statWeek">0</div><div class="label">This Week</div></div>
+  <div class="tstat"><div class="num" style="color:var(--accent);" id="statMonth">0</div><div class="label">This Month</div></div>
+  <div class="tstat"><div class="num" style="color:var(--amber);" id="statTotal">0</div><div class="label">Total Sales</div></div>
+  <div class="tstat"><div class="num" style="color:var(--green);" id="statRevenue">$0</div><div class="label">Revenue</div></div>
+  <div class="tstat"><div class="num" style="color:var(--cyan);" id="statAvg">$0</div><div class="label">Avg Price</div></div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-header"><span>📊 Product Performance</span><span style="font-size:0.68rem;color:var(--text-muted);">Sales per product</span></div>
+    <div class="panel-body" style="max-height:300px;">
+      <div id="perfList" style="margin-bottom:12px;"></div>
+      <div style="font-weight:600;font-size:0.75rem;margin-bottom:6px;">📈 Revenue by Channel</div>
+      <div class="channel-bar" id="channelBar"></div>
+      <div style="display:flex;gap:12px;margin-top:6px;font-size:0.68rem;">
+        <span>🔴 Reddit</span><span>🔵 Direct</span><span>🟡 Gumroad</span><span>🟢 Organic</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><span>💰 Recent Sales</span><span style="font-size:0.68rem;color:var(--text-muted);" id="recentCount">0 sales</span></div>
+    <div class="panel-body" style="max-height:300px;">
+      <div id="saleList"><p style="color:var(--text-muted);text-align:center;padding:20px;">No sales yet. Click + Simulate Sale or add one below.</p></div>
+      <div class="add-sale">
+        <select id="saleProduct"></select>
+        <select id="saleChannel"><option>Reddit</option><option>Direct</option><option>Gumroad</option><option>Organic</option></select>
+        <button onclick="addSale()">+ Add Sale</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const products = [
+  { name: 'SEO Blog Engine', price: 49, key: 'seo' },
+  { name: 'SimpleInvoice', price: 29, key: 'invoice' },
+  { name: 'PDF Invoice Extractor', price: 79, key: 'pdf' },
+  { name: 'Email Deliverability Kit', price: 67, key: 'email' },
+  { name: 'InvoiceChaser', price: 39, key: 'chaser' },
+  { name: 'BankMatch', price: 79, key: 'bank' },
+  { name: 'WhatsApp Bot Kit', price: 79, key: 'whatsapp' },
+  { name: 'LeadQualifier', price: 99, key: 'lead' },
+  { name: 'SOC2 Ready', price: 199, key: 'soc2' },
+  { name: 'AI Visibility Audit', price: 149, key: 'aivis' },
+  { name: 'CrawlShield', price: 49, key: 'crawl' },
+  { name: 'AgencyAuditor', price: 149, key: 'agency' },
+  { name: 'DockSecure CVE Scanner', price: 29, key: 'dock' },
+  { name: 'DevPath Career', price: 29, key: 'devpath' },
+];
+
+let sales = JSON.parse(localStorage.getItem('sales_data') || '[]');
+
+function save() { localStorage.setItem('sales_data', JSON.stringify(sales)); }
+
+function addSale() {
+  const productIdx = document.getElementById('saleProduct').value;
+  const channel = document.getElementById('saleChannel').value;
+  const product = products[productIdx];
+  if (!product) return;
+  sales.push({ product: product.name, price: product.price, channel, date: new Date().toISOString() });
+  save(); render(); toast(`💰 +$${product.price} — ${product.name} via ${channel}`);
+}
+
+function addSimSale() {
+  const product = products[Math.floor(Math.random() * products.length)];
+  const channels = ['Reddit', 'Direct', 'Gumroad', 'Organic'];
+  const channel = channels[Math.floor(Math.random() * channels.length)];
+  const daysAgo = Math.floor(Math.random() * 14);
+  const date = new Date(Date.now() - daysAgo * 86400000).toISOString();
+  sales.push({ product: product.name, price: product.price, channel, date });
+  save(); render(); toast(`💎 Simulated: $${product.price} — ${product.name}`);
+}
+
+function render() {
+  // Populate product dropdown
+  document.getElementById('saleProduct').innerHTML = products.map((p, i) => `<option value="${i}">${p.name} — $${p.price}</option>`).join('');
+
+  const today = new Date().toDateString();
+  const weekAgo = new Date(Date.now() - 7*86400000);
+  const monthAgo = new Date(Date.now() - 30*86400000);
+
+  const todaySales = sales.filter(s => new Date(s.date).toDateString() === today);
+  const weekSales = sales.filter(s => new Date(s.date) >= weekAgo);
+  const monthSales = sales.filter(s => new Date(s.date) >= monthAgo);
+
+  document.getElementById('statSales').textContent = todaySales.length;
+  document.getElementById('statWeek').textContent = weekSales.length;
+  document.getElementById('statMonth').textContent = monthSales.length;
+  document.getElementById('statTotal').textContent = sales.length;
+  const totalRev = sales.reduce((s, r) => s + r.price, 0);
+  document.getElementById('statRevenue').textContent = '$' + totalRev.toLocaleString();
+  document.getElementById('statAvg').textContent = sales.length ? '$' + Math.round(totalRev / sales.length) : '$0';
+  document.getElementById('recentCount').textContent = sales.length + ' sales';
+
+  // Recent sales
+  document.getElementById('saleList').innerHTML = sales.length ? sales.slice(-15).reverse().map((s, i) => `
+    <div class="sale-row">
+      <span class="date">${new Date(s.date).toLocaleDateString()}</span>
+      <span class="product">${s.product}</span>
+      <span class="price">$${s.price}</span>
+      <span class="channel">${s.channel}</span>
+      <button class="remove-btn" onclick="removeSale(${sales.length - 1 - i})">✕</button>
+    </div>
+  `).join('') : '<p style="color:var(--text-muted);text-align:center;padding:20px;">No sales yet.</p>';
+
+  // Product performance
+  const perf = {};
+  for (const s of sales) { perf[s.product] = (perf[s.product] || 0) + 1; }
+  const maxSales = Math.max(1, ...Object.values(perf));
+  document.getElementById('perfList').innerHTML = products.map(p => {
+    const count = perf[p.name] || 0;
+    const pct = Math.round(count / maxSales * 100);
+    return `<div class="product-perf">
+      <span class="prod-name">${p.name}</span>
+      <span class="num">$${p.price}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <span class="num">${count}</span>
+      <span class="num" style="color:var(--green);">$${(count*p.price).toLocaleString()}</span>
+    </div>`;
+  }).join('');
+
+  // Channel bar
+  const channels = { 'Reddit': 0, 'Direct': 0, 'Gumroad': 0, 'Organic': 0 };
+  for (const s of sales) { channels[s.channel] = (channels[s.channel] || 0) + 1; }
+  const totalCh = Math.max(1, Object.values(channels).reduce((a,b)=>a+b,0));
+  document.getElementById('channelBar').innerHTML = Object.entries(channels).map(([ch, count]) => {
+    const pct = Math.round(count / totalCh * 100);
+    const cls = ch === 'Reddit' ? 'ch-reddit' : ch === 'Direct' ? 'ch-direct' : ch === 'Gumroad' ? 'ch-gumroad' : 'ch-organic';
+    return pct > 0 ? `<span class="channel-seg ${cls}" style="width:${pct}%;">${pct}%</span>` : '';
+  }).join('');
+}
+
+function removeSale(idx) {
+  sales.splice(idx, 1);
+  save(); render();
+}
+
+function resetAll() {
+  if (!confirm('Delete all sales data?')) return;
+  sales = [];
+  save(); render();
+  toast('🧹 Dashboard reset.');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+render();
+if (!sales.length) { addSimSale(); addSimSale(); addSimSale(); addSimSale(); }
+</script>
+</body>
+</html>

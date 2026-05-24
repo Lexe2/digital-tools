@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadQualifier — Auto-Qualify & Respond to Leads 24/7</title>
+<style>
+  :root {
+    --bg: #f4f6f9; --surface: #fff; --border: #dee2e8;
+    --text: #1a1d26; --text-secondary: #5c6678; --text-muted: #8b93a5;
+    --accent: #059669; --accent-hover: #047857; --amber: #d97706; --red: #dc2626;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 720px; margin: 0 auto; }
+
+  header { text-align: center; padding: 24px 0 16px; }
+  header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px; }
+
+  .stats-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; text-align: center; flex: 1; min-width: 80px; }
+  .stat .num { font-size: 1.5rem; font-weight: 700; }
+  .stat .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .business-selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+  .biz-btn {
+    padding: 8px 16px; border-radius: 100px; border: 1px solid var(--border);
+    background: var(--surface); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    transition: all 0.12s;
+  }
+  .biz-btn:hover { border-color: var(--accent); }
+  .biz-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .simulation { display: grid; grid-template-columns: 1fr 360px; gap: 16px; margin-bottom: 16px; }
+  .website-preview {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    min-height: 500px; position: relative; overflow: hidden;
+  }
+  .site-header { padding: 16px; border-bottom: 1px solid var(--border); font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .site-body { padding: 24px 16px; text-align: center; color: var(--text-secondary); }
+  .site-body h2 { font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+  .site-cta { display: inline-block; padding: 12px 28px; background: var(--accent); color: #fff; border-radius: 6px; font-weight: 700; margin-top: 16px; cursor: pointer; }
+
+  .chat-bubble {
+    position: absolute; bottom: 20px; right: 20px;
+    width: 52px; height: 52px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    z-index: 10; transition: transform 0.15s;
+  }
+  .chat-bubble:hover { transform: scale(1.1); }
+  .chat-bubble .badge {
+    position: absolute; top: -4px; right: -4px; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--red); color: #fff; font-size: 0.65rem;
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .chat-bubble .dot { animation: pulse 2s infinite; display: inline-block; }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  .chat-window {
+    position: absolute; bottom: 80px; right: 16px; width: 320px; height: 420px;
+    background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: none; flex-direction: column; overflow: hidden; z-index: 20;
+  }
+  .chat-window.open { display: flex; }
+  .chat-header { background: var(--accent); color: #fff; padding: 10px 14px; font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+  .chat-header button { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; background: #f8f9fb; }
+  .cmsg { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; line-height: 1.4; }
+  .cmsg-bot { background: #fff; align-self: flex-start; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
+  .cmsg-user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .cmsg .quick-options { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  .cmsg .qopt { padding: 5px 10px; border: 1px solid var(--accent); border-radius: 100px; font-size: 0.75rem; cursor: pointer; color: var(--accent); background: #fff; font-weight: 500; }
+  .cmsg .qopt:hover { background: var(--accent); color: #fff; }
+
+  .chat-input { display: flex; padding: 8px; gap: 6px; border-top: 1px solid var(--border); }
+  .chat-input input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; }
+  .chat-input button { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--accent); color: #fff; font-size: 1rem; cursor: pointer; }
+
+  .lead-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  .lead-panel .header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; }
+  .lead-panel .body { padding: 12px; max-height: 460px; overflow-y: auto; font-size: 0.82rem; }
+  .lead-card {
+    background: #f8f9fb; border: 1px solid #e8eaef; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 8px; font-size: 0.78rem;
+  }
+  .lead-card .lead-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .lead-card .lead-name { font-weight: 700; }
+  .lead-card .lead-score { padding: 2px 8px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; }
+  .score-hot { background: #fef2f2; color: var(--red); }
+  .score-warm { background: #fffbeb; color: var(--amber); }
+  .score-cold { background: #f1f5f9; color: var(--text-muted); }
+  .lead-card .lead-detail { color: var(--text-secondary); font-size: 0.73rem; }
+  .lead-card .lead-actions { margin-top: 6px; display: flex; gap: 4px; }
+  .lead-card .lead-actions button {
+    padding: 4px 10px; border-radius: 4px; border: none; font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-accept { background: var(--accent); color: #fff; }
+  .btn-dismiss { background: #f1f5f9; color: var(--text-muted); }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 768px) { .simulation { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>Lead<span>Qualifier</span></h1>
+  <p>Auto-responds 24/7. Pre-qualifies leads. Alerts you only for hot prospects. Embedded in your website.</p>
+</header>
+
+<div class="business-selector">
+  <button class="biz-btn active" onclick="switchBiz('landscaping')">🌿 Landscaping</button>
+  <button class="biz-btn" onclick="switchBiz('plumbing')">🔧 Plumbing</button>
+  <button class="biz-btn" onclick="switchBiz('cleaning')">🧹 Cleaning</button>
+  <button class="biz-btn" onclick="switchBiz('photography')">📸 Photography</button>
+</div>
+
+<div class="stats-row">
+  <div class="stat"><div class="num" style="color:var(--red);" id="statHot">2</div><div class="label">Hot Leads 🔥</div></div>
+  <div class="stat"><div class="num" style="color:var(--amber);" id="statWarm">3</div><div class="label">Warm Leads</div></div>
+  <div class="stat"><div class="num" style="color:var(--text-muted);" id="statCold">4</div><div class="label">Tire Kickers</div></div>
+  <div class="stat"><div class="num" style="color:var(--green);" id="statReplied">94%</div><div class="label">Response Rate</div></div>
+</div>
+
+<div class="simulation">
+  <div class="website-preview" id="site">
+    <div class="site-header"><span id="bizName">GreenLeaf Landscaping</span><span style="color:var(--text-muted);">📞 (555) 123-4567</span></div>
+    <div class="site-body" id="siteBody">
+      <h2>Professional Landscaping & Garden Design</h2>
+      <p>Residential and commercial. Free estimates.</p>
+      <div class="site-cta" onclick="simulateVisitor()">Get Free Estimate</div>
+    </div>
+    <div class="chat-bubble" onclick="toggleChat()">
+      💬<span class="dot">●</span>
+    </div>
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-header"><span>🤖 Auto-Reply (AI)</span><button onclick="toggleChat()">✕</button></div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="cmsg cmsg-bot">👋 Hi! Looking for landscaping services? I can help you get a quick estimate. What type of project are you interested in?</div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button onclick="sendChat()">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lead-panel">
+    <div class="header"><span>📊 Owner Dashboard</span><span style="font-size:0.7rem;color:var(--text-muted);">Alerts only</span></div>
+    <div class="body" id="leadList">
+      <div class="lead-card">
+        <div class="lead-header"><span class="lead-name">Sarah M.</span><span class="lead-score score-hot">HOT 🔥</span></div>
+        <div class="lead-detail">Full backyard redesign · Budget: $8-12K · Wants quote by Friday · 📞 (310) 555-0147</div>
+        <div class="lead-actions">
+          <button class="btn-accept" onclick="toast('📞 Call Sarah M. at (310) 555-0147 — she wants a quote by Friday. Budget $8-12K.')">📞 Call Now</button>
+          <button class="btn-dismiss">Later</button>
+        </div>
+      </div>
+      <div class="lead-card">
+        <div class="lead-header"><span class="lead-name">Mike T.</span><span class="lead-score score-hot">HOT 🔥</span></div>
+        <div class="lead-detail">Commercial property · Weekly maintenance · 2 acre lot · Budget: $2-3K/mo</div>
+        <div class="lead-actions">
+          <button class="btn-accept" onclick="toast('📞 Call Mike T. about commercial maintenance contract. $2-3K/mo opportunity.')">📞 Call Now</button>
+          <button class="btn-dismiss">Later</button>
+        </div>
+      </div>
+      <div class="lead-card">
+        <div class="lead-header"><span class="lead-name">Anonymous</span><span class="lead-score score-cold">COLD</span></div>
+        <div class="lead-detail">"Just browsing" · No budget · Did not provide contact</div>
+        <div class="lead-actions"><button class="btn-dismiss">Dismiss</button></div>
+      </div>
+      <p style="text-align:center;color:var(--text-muted);font-size:0.73rem;margin-top:8px;">🔥 Hot leads: notified instantly<br>❄ Tire kickers: never seen</p>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;background:linear-gradient(135deg,#059669,#10b981);color:#fff;padding:16px;border-radius:var(--radius);margin-top:12px;">
+  <strong>Pro: $99 one-time.</strong> Custom qualification flows, SMS alerts, Google Sheets logging, embed code for any website. Deploy in 5 minutes.
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const bizFlows = {
+  landscaping: {
+    name: 'GreenLeaf Landscaping',
+    greeting: "👋 Hi! Looking for landscaping services? I can help you get a quick estimate. What type of project are you interested in?\n\n🌿 Garden Design\n🌳 Tree Work\n🏡 Lawn Maintenance\n🛠 Hardscaping / Patio\n💰 Just Browsing",
+    questions: [
+      { ask: "Great choice! How big is the area? (Approximate square feet or just describe it)", key: 'size' },
+      { ask: "What's your approximate budget range?\n\n💵 Under $500\n💵💵 $500-$2,000\n💵💵💵 $2,000-$10,000\n💵💵💵💵 $10,000+", key: 'budget' },
+      { ask: "When do you need this done?\n\n⚡ ASAP (this week)\n📅 This Month\n🗓 Next Month\n🤔 Just Researching", key: 'timeline' },
+    ],
+    closeMsg: (lead) => {
+      if (lead.budget === '💵💵💵 $2,000-$10,000' || lead.budget === '💵💵💵💵 $10,000+') {
+        return { score: 'hot', msg: "Excellent! 🎉 Based on your project, I'm flagging this as high priority. My team will call you within the hour.\n\nCan I get your name and phone number?";
+      } else if (lead.budget === '💵💵 $500-$2,000' && lead.timeline !== '🤔 Just Researching') {
+        return { score: 'warm', msg: "Thanks! I've noted your project details. Someone will get back to you by end of day.\n\nWhat's the best number to reach you?" };
+      } else {
+        return { score: 'cold', msg: "Thanks for the info! We'll keep your details on file. Feel free to reach out when you're ready to move forward. 📋" };
+      }
+    },
+  },
+  plumbing: {
+    name: 'RapidRooter Plumbing',
+    greeting: "👋 Plumbing emergency? Or planning a project? I can help either way.\n\n🚨 Emergency (leak, burst pipe, no water)\n🔧 Repair / Replacement\n🏠 Remodel Plumbing\n💰 Just Checking Prices",
+    questions: [
+      { ask: "What's the issue?\n\n💧 Leak / Drip\n🚽 Toilet Problem\n🚿 Shower / Bath\n🔥 Water Heater\n🛠 Other", key: 'issue' },
+      { ask: "How urgent is this?\n\n🚨 Right now — emergency!\n📅 Today\n📅 This week\n🤔 Just planning ahead", key: 'urgency' },
+      { ask: "What's your approximate budget?\n\n💵 Under $200\n💵💵 $200-$500\n💵💵💵 $500-$2,000\n💵💵💵💵 Over $2,000", key: 'budget' },
+    ],
+    closeMsg: (lead) => {
+      if (lead.urgency === '🚨 Right now — emergency!') {
+        return { score: 'hot', msg: "🚨 EMERGENCY PRIORITY. A plumber is being dispatched. What's your address and best phone number? We'll call you in under 5 minutes." };
+      } else if (lead.urgency === '📅 Today' || lead.budget === '💵💵💵 $500-$2,000' || lead.budget === '💵💵💵💵 Over $2,000') {
+        return { score: 'hot', msg: "Got it — we can handle that today. 🔧 What's your address and phone number? I'll have someone call you within 30 minutes." };
+      } else if (lead.budget === '💵💵 $200-$500') {
+        return { score: 'warm', msg: "Thanks! That's within our typical range. What's a good number to reach you? We'll call within 2 hours." };
+      } else {
+        return { score: 'cold', msg: "Got it. When you're ready to proceed, just message us back. We're here when you need us! 🔧" };
+      }
+    },
+  },
+  cleaning: {
+    name: 'Sparkle Clean Co.',
+    greeting: "Hi! 👋 Looking for cleaning services? I'll help you get a quick quote.\n\n🏠 House Cleaning\n🏢 Office Cleaning\n🧹 Deep Clean\n🔄 Recurring Service\n💰 Just Checking Prices",
+    questions: [
+      { ask: "How many bedrooms / approx square feet?\n\n🏠 Studio / 1BR\n🏠 2-3 BR\n🏠 4+ BR\n🏢 Office / Commercial", key: 'size' },
+      { ask: "How often?\n\n🔄 Weekly\n📅 Bi-weekly\n📅 Monthly\n🔂 One-time deep clean", key: 'frequency' },
+    ],
+    closeMsg: (lead) => {
+      if (lead.frequency === '🔄 Weekly' || lead.frequency === '📅 Bi-weekly') {
+        return { score: 'hot', msg: "Great — recurring clients are our specialty! 🎉 For a " + (lead.size || 'standard') + " cleaning on a " + lead.frequency.replace(/[🔄📅]/,'').trim() + " schedule, your estimate is $120-180 per visit.\n\nWhat's your name and phone number? We'll get you on the schedule!" };
+      } else if (lead.frequency === '🔂 One-time deep clean') {
+        return { score: 'warm', msg: "Deep clean — got it! 🧹 Estimate: $250-400 depending on size. What's the best number to reach you?" };
+      } else {
+        return { score: 'cold', msg: "Thanks! Our prices are competitive. Feel free to book when ready — we're available within 48 hours." };
+      }
+    },
+  },
+  photography: {
+    name: 'Aperture Studios',
+    greeting: "Hi! 📸 Thanks for your interest. What type of photography are you looking for?\n\n💍 Wedding / Event\n👤 Portrait / Headshot\n🏠 Real Estate\n🛍 Product / Commercial\n💰 Just Browsing",
+    questions: [
+      { ask: "When do you need the photos?\n\n📅 This week\n📅 This month\n📅 Next 3 months\n🤔 Just researching", key: 'timeline' },
+      { ask: "What's your approximate budget?\n\n💵 Under $500\n💵💵 $500-$1,500\n💵💵💵 $1,500-$5,000\n💵💵💵💵 $5,000+", key: 'budget' },
+    ],
+    closeMsg: (lead) => {
+      if (lead.budget === '💵💵💵 $1,500-$5,000' || lead.budget === '💵💵💵💵 $5,000+') {
+        return { score: 'hot', msg: "Excellent — I'd love to discuss your project! 🎉 We have availability this month. Could you share your name, email, and phone? I'll send over our portfolio + pricing guide." };
+      } else if (lead.timeline !== '🤔 Just researching' && lead.budget !== '💵 Under $500') {
+        return { score: 'warm', msg: "Thanks! Let me check availability for your dates. What's your email? I'll send options." };
+      } else {
+        return { score: 'cold', msg: "No problem! Here's our portfolio link. Reach out when you're ready to book — we'd love to work with you! 📸" };
+      }
+    },
+  },
+};
+
+let currentBiz = 'landscaping';
+let chatOpen = false;
+let leadData = {};
+let questionIndex = 0;
+let leadId = 1;
+
+function switchBiz(biz) {
+  currentBiz = biz;
+  document.getElementById('bizName').textContent = bizFlows[biz].name;
+  document.querySelectorAll('.biz-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.biz-btn[onclick*="${biz}"]`).classList.add('active');
+  resetChat();
+}
+
+function resetChat() {
+  questionIndex = 0;
+  leadData = {};
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = `<div class="cmsg cmsg-bot">${bizFlows[currentBiz].greeting.replace(/\n/g, '<br>')}</div>`;
+}
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const win = document.getElementById('chatWindow');
+  if (chatOpen) { win.classList.add('open'); resetChat(); }
+  else { win.classList.remove('open'); }
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML += `<div class="cmsg cmsg-user">${text}</div>`;
+
+  const flow = bizFlows[currentBiz];
+  
+  // If contact info collected at end
+  if (questionIndex >= flow.questions.length) {
+    leadData.contact = text;
+    const result = flow.closeMsg(leadData);
+    msgs.innerHTML += `<div class="cmsg cmsg-bot">${result.msg}<br><br><small style="color:var(--text-muted);">Qualified as: ${result.score.toUpperCase()} lead</small></div>`;
+    
+    if (result.score === 'hot') addLead('Visitor', result.score, leadData);
+    questionIndex = 0;
+    leadData = {};
+    msgs.scrollTop = msgs.scrollHeight;
+    return;
+  }
+
+  // Collect answer
+  const q = flow.questions[questionIndex];
+  leadData[q.key] = text;
+  questionIndex++;
+
+  if (questionIndex < flow.questions.length) {
+    msgs.innerHTML += `<div class="cmsg cmsg-bot">${flow.questions[questionIndex].ask.replace(/\n/g, '<br>')}</div>`;
+  } else {
+    // All questions done — close
+    const result = flow.closeMsg(leadData);
+    msgs.innerHTML += `<div class="cmsg cmsg-bot">${result.msg}</div>`;
+    if (result.score === 'hot' || result.score === 'warm') {
+      addLead('New Lead', result.score, leadData);
+    }
+    questionIndex = 0;
+    leadData = {};
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addLead(name, score, data) {
+  const list = document.getElementById('leadList');
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const card = document.createElement('div');
+  card.className = 'lead-card';
+  card.innerHTML = `
+    <div class="lead-header">
+      <span class="lead-name">${name}</span>
+      <span class="lead-score ${score === 'hot' ? 'score-hot' : score === 'warm' ? 'score-warm' : 'score-cold'}">${score.toUpperCase()} ${score === 'hot' ? '🔥' : ''}</span>
+    </div>
+    <div class="lead-detail">${Object.entries(data).map(([k,v]) => `${k}: ${v}`).join(' · ')} · ${now}</div>
+    <div class="lead-actions">
+      <button class="btn-accept" onclick="toast('📞 Lead qualified! Contact details: ' + '${Object.values(data).join(', ')}')">📞 Respond</button>
+      <button class="btn-dismiss">Later</button>
+    </div>
+  `;
+  list.insertBefore(card, list.firstChild);
+  updateStats();
+}
+
+function updateStats() {
+  const cards = document.querySelectorAll('.lead-card .lead-score');
+  let hot = 0, warm = 0, cold = 0;
+  cards.forEach(c => {
+    if (c.textContent.includes('HOT')) hot++;
+    else if (c.textContent.includes('WARM')) warm++;
+    else cold++;
+  });
+  document.getElementById('statHot').textContent = hot;
+  document.getElementById('statWarm').textContent = warm;
+  document.getElementById('statCold').textContent = cold;
+}
+
+function simulateVisitor() {
+  if (!chatOpen) toggleChat();
+  setTimeout(() => {
+    document.getElementById('chatInput').value = "I'm interested in a quote";
+    sendChat();
+  }, 800);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+}
+</script>
+</body>
+</html>

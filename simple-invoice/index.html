@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SimpleInvoice — Clean Invoicing</title>
+<style>
+  :root { --bg: #f8fafc; --surface: #fff; --border: #dde1e8; --text: #1a1d26; --text-secondary: #5f6878; --text-muted: #8b929e; --accent: #7c3aed; --green: #059669; --radius: 8px; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 1100px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 18px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  header h1 { font-size: 1.3rem; font-weight: 700; } header h1 span { color: var(--accent); }
+  .btn { padding: 7px 14px; border-radius: 6px; font-size: 0.84rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: background 0.12s; }
+  .btn:hover { background: #f1f5f9; }
+  .btn-primary { background: var(--accent); color: #fff; border: none; } .btn-primary:hover { background: #6d28d9; }
+  .split { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+  .preview { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; min-height: 600px; font-size: 0.88rem; }
+  .pv-header { display: flex; justify-content: space-between; margin-bottom: 36px; }
+  .pv-from, .pv-to { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; }
+  .pv-from strong, .pv-to strong { font-size: 1.05rem; color: var(--text); display: block; margin-bottom: 4px; }
+  .pv-to { text-align: right; }
+  .pv-meta { display: flex; justify-content: space-between; margin-bottom: 28px; font-size: 0.82rem; }
+  .inv-num { font-weight: 700; font-size: 1.7rem; color: var(--accent); letter-spacing: -0.02em; }
+  .badge { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+  table.pvt { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  table.pvt th { text-align: left; padding: 9px 10px; border-bottom: 2px solid var(--border); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  table.pvt td { padding: 9px 10px; border-bottom: 1px solid #f0f1f3; font-size: 0.82rem; }
+  table.pvt .r { text-align: right; } table.pvt .c { text-align: center; }
+  table.pvt tr.total td { font-weight: 700; font-size: 0.92rem; border-top: 2px solid var(--text); padding-top: 10px; }
+  .pv-notes { font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border); padding-top: 18px; }
+  .pv-footer { margin-top: 36px; text-align: center; font-size: 0.7rem; color: var(--text-muted); }
+
+  .editor { display: flex; flex-direction: column; gap: 12px; }
+  .ed { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .ed h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px; }
+  .ed label { display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 2px; margin-top: 6px; }
+  .ed input, .ed textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.82rem; font-family: inherit; }
+  .ed input:focus, .ed textarea:focus { outline: none; border-color: var(--accent); }
+  .ed textarea { resize: vertical; }
+  .ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ed-grid input { margin-top: 2px; }
+
+  .line-item { display: flex; gap: 6px; align-items: center; padding: 4px 0; }
+  .line-item input { margin-top: 0 !important; }
+  .line-item input.desc { flex: 2; }
+  .line-item input.qty { max-width: 50px; text-align: center; }
+  .line-item input.rate { max-width: 95px; text-align: right; }
+  .line-item .total { min-width: 65px; text-align: right; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; font-weight: 500; }
+  .line-item button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 2px 4px; flex-shrink: 0; }
+  .line-item button:hover { color: #ef4444; }
+
+  .totals-row { display: flex; justify-content: flex-end; gap: 100px; padding: 8px 0; font-size: 0.82rem; }
+  .totals-row.grand { font-weight: 700; font-size: 0.95rem; border-top: 1px solid var(--border); padding-top: 8px; color: var(--accent); }
+
+  @media print { body { background: #fff; padding: 0; } header, .editor { display: none; } .split { grid-template-columns: 1fr; } .preview { border: none; box-shadow: none; padding: 20px; } }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } .preview { padding: 24px; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header id="topbar">
+  <h1>Simple<span>Invoice</span></h1>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" onclick="resetInvoice()">+ New Invoice</button>
+    <button class="btn-primary" onclick="window.print()">🖨 Save as PDF</button>
+  </div>
+</header>
+
+<div class="split">
+  <div class="preview" id="previewPane"></div>
+
+  <div class="editor">
+    <div class="ed">
+      <h3>Your Info</h3>
+      <input type="text" placeholder="Company / Your Name" id="fName" value="Acme Freelance LLC" oninput="refreshPreview()">
+      <textarea placeholder="Address" rows="2" id="fAddr" oninput="refreshPreview()">123 Main St, Suite 100&#10;San Francisco, CA 94105</textarea>
+      <input type="text" placeholder="Email" id="fEmail" value="you@acmefreelance.com" oninput="refreshPreview()">
+    </div>
+
+    <div class="ed">
+      <h3>Client Info</h3>
+      <input type="text" placeholder="Client company / name" id="cName" value="TechStartup Inc." oninput="refreshPreview()">
+      <textarea placeholder="Client address" rows="2" id="cAddr" oninput="refreshPreview()">456 Oak Ave&#10;New York, NY 10001</textarea>
+      <input type="text" placeholder="Client email" id="cEmail" value="billing@techstartup.com" oninput="refreshPreview()">
+    </div>
+
+    <div class="ed">
+      <h3>Invoice Details</h3>
+      <div class="ed-grid">
+        <div><label>Invoice Number</label><input type="text" id="invNum" value="INV-2026-001" oninput="refreshPreview()"></div>
+        <div><label>Date</label><input type="date" id="invDate" value="2026-05-23" oninput="refreshPreview()"></div>
+        <div><label>Due Date</label><input type="date" id="invDue" value="2026-06-22" oninput="refreshPreview()"></div>
+        <div><label>Tax Rate (%)</label><input type="number" id="invTax" value="0" min="0" max="50" oninput="refreshPreview()"></div>
+      </div>
+    </div>
+
+    <div class="ed">
+      <h3>Line Items</h3>
+      <div id="lines"></div>
+      <button onclick="addItem()" style="font-size:0.78rem;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;margin-top:6px;">+ Add line item</button>
+      <div class="totals-row"><span>Subtotal:</span> <strong id="tSub">$0.00</strong></div>
+      <div class="totals-row"><span>Tax:</span> <strong id="tTax">$0.00</strong></div>
+      <div class="totals-row grand"><span>Total:</span> <strong id="tTotal">$0.00</strong></div>
+    </div>
+
+    <div class="ed">
+      <h3>Notes / Payment Terms</h3>
+      <input type="text" placeholder="Payment terms, thank you note..." id="notes" value="Payment due within 30 days. Thank you for your business!" oninput="refreshPreview()">
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──
+const items = [
+  { desc: 'Web Development — Project Alpha', qty: 1, rate: 5000 },
+  { desc: 'Monthly Maintenance Retainer', qty: 1, rate: 1500 },
+];
+
+const fmt = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = (s) => { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; };
+const get = (id) => document.getElementById(id).value;
+const getNum = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+function calcSubtotal() { return items.reduce((s, i) => s + i.qty * i.rate, 0); }
+function calcTax() { return calcSubtotal() * (getNum('invTax') / 100); }
+function calcTotal() { return calcSubtotal() + calcTax(); }
+
+// ── Line Item DOM ──
+function buildLineItem(idx, item) {
+  return `<div class="line-item" data-idx="${idx}">
+    <input type="text" class="desc" placeholder="Description" value="${esc(item.desc)}" oninput="items[${idx}].desc=this.value;updateLineTotal(${idx});refreshPreview()">
+    <input type="number" class="qty" value="${item.qty}" min="0" step="0.01" oninput="items[${idx}].qty=parseFloat(this.value)||0;updateLineTotal(${idx});refreshPreview()">
+    <input type="number" class="rate" value="${item.rate}" min="0" step="0.01" oninput="items[${idx}].rate=parseFloat(this.value)||0;updateLineTotal(${idx});refreshPreview()">
+    <span class="total" id="lt-${idx}">${fmt(item.qty * item.rate)}</span>
+    <button onclick="removeItem(${idx})" title="Remove">×</button>
+  </div>`;
+}
+
+function renderLines() {
+  document.getElementById('lines').innerHTML = items.map((item, idx) => buildLineItem(idx, item)).join('');
+  updateAllLineTotals();
+}
+
+function addItem() {
+  items.push({ desc: '', qty: 1, rate: 0 });
+  renderLines();
+  refreshPreview();
+  // Focus the new description field
+  const lastInput = document.querySelector('#lines .line-item:last-child input.desc');
+  if (lastInput) lastInput.focus();
+}
+
+function removeItem(idx) {
+  if (items.length <= 1) return;
+  items.splice(idx, 1);
+  renderLines();
+  refreshPreview();
+}
+
+function updateLineTotal(idx) {
+  const el = document.getElementById('lt-' + idx);
+  if (el) el.textContent = fmt(items[idx].qty * items[idx].rate);
+}
+
+function updateAllLineTotals() {
+  items.forEach((item, idx) => updateLineTotal(idx));
+}
+
+// ── Preview ──
+function refreshPreview() {
+  const fName = get('fName') || 'Your Company';
+  const fAddr = (get('fAddr') || '').replace(/\n/g, '<br>');
+  const fEmail = get('fEmail') || '';
+  const cName = get('cName') || 'Client Name';
+  const cAddr = (get('cAddr') || '').replace(/\n/g, '<br>');
+  const cEmail = get('cEmail') || '';
+  const invNum = get('invNum') || 'INV-0001';
+  const invDate = get('invDate') ? new Date(get('invDate') + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : '';
+  const invDue = get('invDue') ? new Date(get('invDue') + 'T00:00:00').toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : '';
+  const notes = get('notes') || '';
+
+  const sub = calcSubtotal();
+  const tax = calcTax();
+  const total = calcTotal();
+
+  // Update editor totals
+  document.getElementById('tSub').textContent = fmt(sub);
+  document.getElementById('tTax').textContent = fmt(tax);
+  document.getElementById('tTotal').textContent = fmt(total);
+
+  // Render preview
+  const rows = items.map(i => `<tr><td>${esc(i.desc)}</td><td class="c">${i.qty}</td><td class="r">${fmt(i.rate)}</td><td class="r">${fmt(i.qty * i.rate)}</td></tr>`).join('');
+
+  document.getElementById('previewPane').innerHTML = `
+    <div class="pv-header">
+      <div class="pv-from"><strong>${esc(fName)}</strong>${fAddr}${fEmail ? '<br>'+esc(fEmail) : ''}</div>
+      <div class="pv-to"><strong>${esc(cName)}</strong>${cAddr}${cEmail ? '<br>'+esc(cEmail) : ''}</div>
+    </div>
+    <div class="pv-meta">
+      <div><div class="inv-num">${esc(invNum)}</div><div>Date: ${invDate}</div><div>Due: ${invDue}</div></div>
+      <div><span class="badge">PENDING</span></div>
+    </div>
+    <table class="pvt">
+      <thead><tr><th>Description</th><th class="c">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr><td colspan="3" class="r" style="padding-top:10px;">Subtotal</td><td class="r" style="padding-top:10px;">${fmt(sub)}</td></tr>
+        <tr><td colspan="3" class="r">Tax (${getNum('invTax')}%)</td><td class="r">${fmt(tax)}</td></tr>
+        <tr class="total"><td colspan="3" class="r">Total Due</td><td class="r">${fmt(total)}</td></tr>
+      </tfoot>
+    </table>
+    <div class="pv-notes">${esc(notes)}</div>
+    <div class="pv-footer">SimpleInvoice — Clean invoicing for independent workers</div>`;
+}
+
+function resetInvoice() {
+  items.length = 0;
+  items.push({ desc: '', qty: 1, rate: 0 });
+  document.getElementById('cName').value = '';
+  document.getElementById('cAddr').value = '';
+  document.getElementById('cEmail').value = '';
+  document.getElementById('notes').value = '';
+  document.getElementById('invTax').value = 0;
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('invDate').value = today;
+  const due = new Date(); due.setDate(due.getDate() + 30);
+  document.getElementById('invDue').value = due.toISOString().slice(0,10);
+  document.getElementById('invNum').value = 'INV-' + today.slice(0,4) + '-' + String(Math.floor(Math.random()*9000+1000));
+  renderLines();
+  refreshPreview();
+}
+
+// ── Initialize ──
+renderLines();
+refreshPreview();
+
+// ── Tests (run in console: testAll()) ──
+function testAll() {
+  const results = [];
+  const assert = (name, condition) => { results.push({ name, pass: !!condition }); if (!condition) console.error('FAIL:', name); };
+  
+  assert('Items loaded', items.length === 2);
+  assert('Preview has rows', document.querySelectorAll('.pvt tbody tr').length === 2);
+  assert('Subtotal correct', calcSubtotal() === 6500);
+  assert('Total correct', calcTotal() === 6500);
+  assert('Preview total renders', document.querySelector('.pvt tr.total td.r') !== null);
+  assert('Preview total value', document.querySelector('.pvt tr.total td.r').textContent.includes('6,500'));
+  
+  addItem();
+  assert('Add item works', items.length === 3);
+  assert('DOM updated after add', document.querySelectorAll('#lines .line-item').length === 3);
+  
+  items[2].desc = 'Test Item';
+  items[2].qty = 2;
+  items[2].rate = 100;
+  refreshPreview();
+  assert('New item in preview', document.querySelectorAll('.pvt tbody tr').length === 3);
+  assert('Updated subtotal', calcSubtotal() === 6700);
+  
+  removeItem(2);
+  assert('Remove item works', items.length === 2);
+  
+  console.table(results);
+  return results.every(r => r.pass) ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED — see above';
+}
+
+console.log('SimpleInvoice loaded. Items:', items.length, '| Total: $' + calcTotal().toLocaleString());
+console.log('Run testAll() to verify.');
+</script>
+</body>
+</html>

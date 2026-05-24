@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Monitor — Uptime & Performance Dashboard</title>
+<style>
+:root{--bg:#0a0f16;--surface:#111821;--border:#1e293b;--text:#e2e8f0;--muted:#8899aa;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--accent:#6366f1;--radius:8px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;padding:16px;max-width:1000px;margin:0 auto}
+h1{font-size:1.4rem;margin-bottom:4px}h1 span{color:var(--accent)}
+.subtitle{color:var(--muted);font-size:.85rem;margin-bottom:20px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative}
+.card .endpoint{font-weight:600;font-size:.9rem;margin-bottom:4px}
+.card .method{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700;margin-bottom:8px}
+.method.GET{background:rgba(34,197,94,.15);color:var(--green)}
+.method.POST{background:rgba(99,102,241,.15);color:var(--accent)}
+.method.DELETE{background:rgba(239,68,68,.15);color:var(--red)}
+.card .status{display:flex;align-items:center;gap:6px;font-size:.85rem;margin-bottom:4px}
+.card .dot{width:8px;height:8px;border-radius:50%}
+.dot.up{background:var(--green);box-shadow:0 0 6px rgba(34,197,94,.5)}
+.dot.down{background:var(--red);box-shadow:0 0 6px rgba(239,68,68,.5)}
+.dot.warn{background:var(--yellow)}
+.card .ms{font-size:.8rem;color:var(--muted)}
+.card .err-label{color:var(--red);font-size:.8rem;margin-top:4px}
+
+.controls{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:.85rem;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .15s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{box-shadow:0 0 16px rgba(99,102,241,.25)}
+
+.log-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.log-panel h3{font-size:.95rem;margin-bottom:12px;color:var(--muted)}
+.log-entry{padding:6px 0;font-size:.8rem;border-bottom:1px solid var(--border);font-family:'SF Mono',monospace}
+.log-entry:last-child{border:none}
+.log-time{color:var(--muted);margin-right:10px}
+.log-up{color:var(--green)}.log-down{color:var(--red)}.log-warn{color:var(--yellow)}
+
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.summary .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+.summary .stat .val{font-size:1.6rem;font-weight:800}
+.summary .stat .lbl{font-size:.75rem;color:var(--muted)}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:none}
+
+.upsell{background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(99,102,241,.04));border:1px solid var(--accent);border-radius:var(--radius);padding:24px;text-align:center;margin-top:20px}
+.upsell h3{margin-bottom:8px}
+.upsell p{color:var(--muted);font-size:.85rem;margin-bottom:16px}
+.upsell .btn.primary{font-size:.95rem;padding:12px 32px}
+
+@media(max-width:640px){.grid{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<h1>API<span>Monitor</span></h1>
+<div class="subtitle">Real-time uptime & performance monitoring for your API endpoints. Pro version: multi-team alerts, 30-day history, Slack/PagerDuty integration.</div>
+
+<div class="summary" id="summary"></div>
+
+<div class="controls">
+  <button class="btn primary" onclick="runAll()">▶ Run Full Scan</button>
+  <button class="btn" onclick="exportCSV()">⬇ Export CSV</button>
+  <button class="btn" onclick="resetAll()">↻ Reset Demo</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="log-panel">
+  <h3>📋 Event Log</h3>
+  <div id="log"></div>
+</div>
+
+<div class="upsell">
+  <h3>Pro: Multi-Team Alerts + 30-Day History — $149</h3>
+  <p>Slack alerts, PagerDuty integration, custom status pages, anomaly detection. One-time purchase. No subscription.</p>
+  <button class="btn primary">Get Pro — $149</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ENDPOINTS = [
+  {id:1,endpoint:'/api/v1/users',method:'GET',url:'https://api.example.com/v1/users'},
+  {id:2,endpoint:'/api/v1/auth/login',method:'POST',url:'https://api.example.com/v1/auth/login'},
+  {id:3,endpoint:'/api/v1/orders',method:'GET',url:'https://api.example.com/v1/orders'},
+  {id:4,endpoint:'/api/v1/payments',method:'POST',url:'https://api.example.com/v1/payments'},
+  {id:5,endpoint:'/api/v1/products',method:'GET',url:'https://api.example.com/v1/products'},
+  {id:6,endpoint:'/api/v1/analytics',method:'GET',url:'https://analytics.example.com/v1/events'},
+  {id:7,endpoint:'/api/v1/search',method:'GET',url:'https://search.example.com/v1/query'},
+  {id:8,endpoint:'/api/v1/notify',method:'POST',url:'https://notify.example.com/v1/send'},
+  {id:9,endpoint:'/api/v2/migrate',method:'POST',url:'https://api.example.com/v2/migrate'},
+  {id:10,endpoint:'/api/v1/admin/users',method:'DELETE',url:'https://api.example.com/v1/admin/users'}
+];
+
+const STATES = {};
+
+function initState(){
+  ENDPOINTS.forEach(e=>{
+    STATES[e.id] = {
+      up:true,ms:Math.floor(Math.random()*300+20),
+      lastCheck:Date.now()-Math.floor(Math.random()*300000),
+      errors:0
+    };
+  });
+  STATES[3].up=false; STATES[3].ms=0; STATES[3].errors=3;
+  STATES[6].ms=420; STATES[6].errors=0;
+  STATES[9].up=false; STATES[9].ms=0; STATES[9].errors=7;
+}
+
+function statusClass(ep){
+  const s=STATES[ep.id];
+  if(!s.up)return'down';
+  if(s.ms>300)return'warn';
+  return'up';
+}
+
+function ago(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return s+'s ago';
+  if(s<3600)return Math.floor(s/60)+'m ago';
+  return Math.floor(s/3600)+'h ago';
+}
+
+function render(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML=ENDPOINTS.map(e=>{
+    const s=STATES[e.id],sc=statusClass(e);
+    const statusLabel=s.up?(s.ms>300?'DEGRADED':'UP'):'DOWN';
+    const msText=s.up?`${s.ms}ms`:'—';
+    const errText=s.errors>0?`<div class="err-label">${s.errors} errors in last hour</div>`:'';
+    return `<div class="card">
+      <div class="endpoint">${e.endpoint}</div>
+      <div class="method ${e.method}">${e.method}</div>
+      <div class="status"><div class="dot ${sc}"></div>${statusLabel}</div>
+      <div class="ms">${msText} · checked ${ago(s.lastCheck)}</div>
+      ${errText}
+    </div>`;
+  }).join('');
+  
+  renderSummary();
+}
+
+function renderSummary(){
+  const up=ENDPOINTS.filter(e=>STATES[e.id].up&&STATES[e.id].ms<=300).length;
+  const degraded=ENDPOINTS.filter(e=>STATES[e.id].up&&STATES[e.id].ms>300).length;
+  const down=ENDPOINTS.filter(e=>!STATES[e.id].up).length;
+  const avgMs=ENDPOINTS.filter(e=>STATES[e.id].up).reduce((a,e)=>a+STATES[e.id].ms,0)/Math.max(up+degraded,1);
+  document.getElementById('summary').innerHTML=`
+    <div class="stat"><div class="val" style="color:var(--green)">${up}</div><div class="lbl">Healthy</div></div>
+    <div class="stat"><div class="val" style="color:var(--yellow)">${degraded}</div><div class="lbl">Degraded</div></div>
+    <div class="stat"><div class="val" style="color:var(--red)">${down}</div><div class="lbl">Down</div></div>
+    <div class="stat"><div class="val">${Math.round(avgMs)}ms</div><div class="lbl">Avg Response</div></div>
+  `;
+}
+
+function addLog(ep,status){
+  const log=document.getElementById('log');
+  const time=new Date().toLocaleTimeString();
+  const cls='log-'+status;
+  log.innerHTML=`<div class="log-entry"><span class="log-time">${time}</span><span class="${cls}">${status.toUpperCase()}</span> ${ep.endpoint} (${STATES[ep.id].ms||'timeout'}ms)</div>`+log.innerHTML;
+}
+
+function runAll(){
+  ENDPOINTS.forEach(e=>{
+    STATES[e.id].lastCheck=Date.now();
+    if(e.id===3||e.id===9){
+      const recovering=Math.random()>0.6;
+      STATES[e.id].up=recovering;
+      STATES[e.id].ms=recovering?Math.floor(Math.random()*200+50):0;
+      if(!recovering) STATES[e.id].errors++;
+      addLog(e,recovering?'up':'down');
+    }else{
+      STATES[e.id].up=true;
+      STATES[e.id].ms=Math.floor(Math.random()*250+15);
+      if(e.id===6) STATES[e.id].ms=Math.random()>0.4?380:210;
+      addLog(e,STATES[e.id].ms>300?'warn':'up');
+    }
+  });
+  render();
+  toast('Scan complete — '+ENDPOINTS.filter(e=>STATES[e.id].up).length+'/'+ENDPOINTS.length+' endpoints healthy');
+}
+
+function exportCSV(){
+  let csv='Endpoint,Method,Status,Response(ms),Errors,Last Check\n';
+  ENDPOINTS.forEach(e=>{
+    const s=STATES[e.id];
+    csv+=`${e.endpoint},${e.method},${s.up?(s.ms>300?'DEGRADED':'UP'):'DOWN'},${s.ms||'timeout'},${s.errors},${new Date(s.lastCheck).toISOString()}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='api-monitor-report.csv';a.click();
+  toast('CSV exported');
+}
+
+function resetAll(){
+  initState();
+  document.getElementById('log').innerHTML='';
+  render();
+  toast('Reset to demo data');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+initState();render();
+</script>
+</body>
+</html>

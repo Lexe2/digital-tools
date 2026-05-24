@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC2 Ready — Compliance Evidence Collector</title>
+<style>
+  :root {
+    --bg: #0f1218; --surface: #161b24; --surface-raised: #1c2331;
+    --border: #252d3b; --text: #e2e8f0; --text-secondary: #8896ab;
+    --text-muted: #546078; --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --amber: #f59e0b; --red: #ef4444; --violet: #8b5cf6;
+    --radius: 8px; --font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+  .app { max-width: 1100px; margin: 0 auto; }
+
+  header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+  header h1 span { color: var(--accent); }
+
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--surface-raised); }
+
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; text-align: center;
+  }
+  .stat-card .num { font-size: 1.6rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  .split { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; }
+  .panel-body { padding: 14px; font-size: 0.8rem; max-height: 500px; overflow-y: auto; }
+
+  .evidence-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid rgba(37,45,59,0.5); font-size: 0.8rem;
+  }
+  .evidence-row .check { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; }
+  .check-pass { background: rgba(34,197,94,0.12); color: var(--green); }
+  .check-fail { background: rgba(239,68,68,0.12); color: var(--red); }
+  .check-warn { background: rgba(245,158,11,0.12); color: var(--amber); }
+  .evidence-row .info { flex: 1; }
+  .evidence-row .info .title { font-weight: 600; }
+  .evidence-row .info .detail { font-size: 0.72rem; color: var(--text-secondary); }
+  .evidence-row .source { font-size: 0.68rem; color: var(--text-muted); padding: 2px 8px; background: rgba(37,45,59,0.5); border-radius: 4px; white-space: nowrap; }
+
+  .score-circle {
+    text-align: center; padding: 20px;
+  }
+  .score-circle .big { font-size: 3rem; font-weight: 800; }
+  .score-circle .label { font-size: 0.8rem; color: var(--text-secondary); }
+
+  .provider-list { display: flex; flex-direction: column; gap: 4px; }
+  .provider-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.1s;
+    font-size: 0.8rem;
+  }
+  .provider-item:hover { border-color: var(--border); background: var(--surface-raised); }
+  .provider-item.active { border-color: var(--accent); background: rgba(59,130,246,0.08); }
+  .provider-item .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-connected { background: var(--green); }
+  .dot-issue { background: var(--amber); }
+
+  .report-preview {
+    background: #0a0d12; border: 1px solid var(--border); border-radius: 6px;
+    padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.73rem;
+    white-space: pre-wrap; color: var(--text-secondary); max-height: 300px; overflow-y: auto;
+    line-height: 1.6;
+  }
+  .report-preview .h { color: var(--accent); font-weight: 700; font-size: 0.8rem; }
+  .report-preview .p { color: var(--green); }
+  .report-preview .f { color: var(--red); }
+  .report-preview .w { color: var(--amber); }
+
+  .upgrade { background: linear-gradient(135deg, #1e3a5f, #2563eb); color: #fff; padding: 16px; border-radius: var(--radius); text-align: center; margin-top: 12px; }
+  .upgrade h3 { margin-bottom: 4px; }
+  .upgrade p { font-size: 0.8rem; opacity: 0.88; margin-bottom: 10px; }
+  .btn-white { background: #fff; color: var(--accent); padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; font-size: 0.82rem; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: #0f1218; padding: 12px 20px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) { .split { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>SOC2<span>Ready</span></h1>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-outline" onclick="exportReport()">⬇ Export Report</button>
+    <button class="btn btn-primary" onclick="runAllChecks()">▶ Run Full Scan</button>
+  </div>
+</header>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="num" style="color:var(--green);" id="sPass">12</div><div class="label">Passed</div></div>
+  <div class="stat-card"><div class="num" style="color:var(--amber);" id="sWarn">3</div><div class="label">Warnings</div></div>
+  <div class="stat-card"><div class="num" style="color:var(--red);" id="sFail">4</div><div class="label">Failed</div></div>
+  <div class="stat-card"><div class="num" style="color:var(--accent);" id="sTotal">19</div><div class="label">Total Checks</div></div>
+  <div class="stat-card"><div class="num" style="color:var(--violet);" id="sScore">63%</div><div class="label">Ready Score</div></div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-header"><span>📋 Evidence Collection Results</span><span style="font-size:0.7rem;color:var(--text-muted);">Simulated scan — Pro connects to live APIs</span></div>
+    <div class="panel-body" id="evidenceList"></div>
+  </div>
+
+  <div>
+    <div class="panel" style="margin-bottom:12px;">
+      <div class="panel-header"><span>🔌 Connected Providers</span></div>
+      <div class="panel-body">
+        <div class="provider-list">
+          <div class="provider-item active"><span class="status-dot dot-connected"></span> Google Workspace — Connected</div>
+          <div class="provider-item active"><span class="status-dot dot-connected"></span> AWS (us-east-1) — Connected</div>
+          <div class="provider-item active"><span class="status-dot dot-connected"></span> GitHub Organization — Connected</div>
+          <div class="provider-item"><span class="status-dot dot-issue"></span> Jira Cloud — Partial (API scope limited)</div>
+          <div class="provider-item"><span class="status-dot dot-issue"></span> Slack Enterprise — Not connected</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:12px;">
+      <div class="panel-header"><span>📊 Readiness Score</span></div>
+      <div class="panel-body">
+        <div class="score-circle">
+          <div class="big" style="color:var(--amber);">63%</div>
+          <div class="label">SOC2 Type II Readiness</div>
+          <div style="margin-top:10px;font-size:0.72rem;color:var(--text-secondary);">
+            Target: 90%+ for auditor submission<br>
+            Gaps in: Access Reviews, MFA Enforcement,<br>Logging Configuration, Vendor Risk
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span>📄 Report Preview</span></div>
+      <div class="panel-body">
+        <div class="report-preview" id="reportPreview">
+<span class="h">SOC2 TYPE II — EVIDENCE COLLECTION REPORT</span>
+Generated: 2026-05-23 | Company: Acme SaaS, Inc.
+──────────────────────────────────────────
+<span class="h">CC1.1 — Access Control Policies</span>
+<span class="p">✓</span> Written access control policy exists (v2.3, 2026-01-15)
+<span class="p">✓</span> Access review cadence: Quarterly (last: 2026-04-01)
+<span class="f">✗</span> 12 accounts with access not reviewed in 2+ cycles
+
+<span class="h">CC2.1 — Monitoring & Logging</span>
+<span class="p">✓</span> AWS CloudTrail enabled all regions
+<span class="f">✗</span> CloudTrail log validation NOT enabled
+<span class="w">⚠</span> Log retention: 90 days (SOC2 recommends 365+)
+
+<span class="h">CC3.1 — Change Management</span>
+<span class="p">✓</span> CI/CD pipeline with mandatory code review (GitHub)
+<span class="p">✓</span> Production access: break-glass only, audited
+<span class="w">⚠</span> 3 repos without branch protection rules
+
+<span class="h">CC4.1 — Risk Assessment</span>
+<span class="p">✓</span> Annual risk assessment completed (2026-03)
+<span class="f">✗</span> Vendor risk reviews: 8 of 24 vendors overdue
+
+<span class="h">CC5.1 — MFA & Password Policies</span>
+<span class="p">✓</span> Google Workspace MFA: Enforced
+<span class="p">✓</span> AWS IAM MFA: Required for console access
+<span class="f">✗</span> GitHub: 5 members without MFA enabled
+
+<span class="h">CC6.1 — Data Classification</span>
+<span class="p">✓</span> Data classification policy documented
+<span class="w">⚠</span> Production data in non-production environments detected
+──────────────────────────────────────────
+<span class="h">SUMMARY: 12 Pass | 3 Warn | 4 Fail — 63% Ready</span>
+Top priority: Enable MFA on all GitHub accounts.
+Top priority: Enable CloudTrail log validation.
+Top priority: Review 8 overdue vendor risk assessments.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="upgrade">
+  <h3>Pro: Real API Connections + Auditor-Ready PDF Export</h3>
+  <p>Pro connects to your actual Google Workspace, AWS, GitHub, Jira, and Slack APIs. Pulls real access lists, MFA status, logging configs. Generates auditor-ready evidence packages. $199 one-time.</p>
+  <button class="btn-white" onclick="alert('SOC2 Ready Pro: $199 one-time. Connects to live APIs (Google, AWS, GitHub, Jira, Slack). Generates auditor-ready PDF/CSV evidence packages. Includes script bundle for recurring scans.')">Get Pro — $199</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const evidence = [
+  { id: 'CC1.1-1', title: 'Access Control Policy', detail: 'Written policy exists, v2.3, last reviewed 2026-01-15', status: 'pass', source: 'Google Drive', category: 'CC1: Access Control' },
+  { id: 'CC1.1-2', title: 'Quarterly Access Review', detail: 'Last completed: 2026-04-01. 97.3% accounts reviewed.', status: 'pass', source: 'Google Workspace', category: 'CC1: Access Control' },
+  { id: 'CC1.1-3', title: 'Stale Access Accounts', detail: '12 accounts with access not reviewed in 2+ cycles. Includes 2 former employees.', status: 'fail', source: 'Google Workspace', category: 'CC1: Access Control' },
+  { id: 'CC2.1-1', title: 'CloudTrail Enabled', detail: 'AWS CloudTrail active in all 4 regions. 1,247,893 events logged this month.', status: 'pass', source: 'AWS CloudTrail', category: 'CC2: Monitoring' },
+  { id: 'CC2.1-2', title: 'CloudTrail Log Validation', detail: 'Log file validation NOT enabled. Cannot prove logs have not been tampered.', status: 'fail', source: 'AWS CloudTrail', category: 'CC2: Monitoring' },
+  { id: 'CC2.1-3', title: 'Log Retention', detail: 'Current: 90 days. SOC2 best practice: 365+ days. 3.2TB of logs auto-deleted.', status: 'warn', source: 'AWS S3 Lifecycle', category: 'CC2: Monitoring' },
+  { id: 'CC3.1-1', title: 'Code Review Enforcement', detail: 'GitHub branch protection: require PR, require review. 42 of 45 repos compliant.', status: 'pass', source: 'GitHub Org', category: 'CC3: Change Mgmt' },
+  { id: 'CC3.1-2', title: 'Branch Protection Coverage', detail: '3 repos without branch protection rules: legacy-utils, data-pipeline, internal-scripts', status: 'warn', source: 'GitHub Org', category: 'CC3: Change Mgmt' },
+  { id: 'CC3.1-3', title: 'Production Access Control', detail: 'Break-glass only. 4 accesses in 90 days, all with documented justification.', status: 'pass', source: 'AWS IAM', category: 'CC3: Change Mgmt' },
+  { id: 'CC4.1-1', title: 'Risk Assessment Completed', detail: 'Annual risk assessment: completed 2026-03-15. 14 risks identified, 11 mitigated.', status: 'pass', source: 'Jira/Confluence', category: 'CC4: Risk Assessment' },
+  { id: 'CC4.1-2', title: 'Vendor Risk Reviews', detail: '24 active vendors. 8 reviews overdue (30+ days past annual review date).', status: 'fail', source: 'Vendor Register', category: 'CC4: Risk Assessment' },
+  { id: 'CC5.1-1', title: 'Google Workspace MFA', detail: 'MFA enforced for all users. 86/86 accounts compliant.', status: 'pass', source: 'Google Admin', category: 'CC5: MFA & Auth' },
+  { id: 'CC5.1-2', title: 'AWS IAM MFA', detail: 'Console access requires MFA. CLI access via roles. 42 IAM users compliant.', status: 'pass', source: 'AWS IAM', category: 'CC5: MFA & Auth' },
+  { id: 'CC5.1-3', title: 'GitHub MFA Compliance', detail: '5 organization members without MFA enabled. Policy requires MFA for all members.', status: 'fail', source: 'GitHub Org', category: 'CC5: MFA & Auth' },
+  { id: 'CC5.1-4', title: 'Password Policy', detail: 'Min 14 chars, complexity enforced, 90-day rotation. All systems compliant.', status: 'pass', source: 'Google Workspace', category: 'CC5: MFA & Auth' },
+  { id: 'CC6.1-1', title: 'Data Classification Policy', detail: 'Policy document CI-006 v1.4. 4 tiers: Public, Internal, Confidential, Restricted.', status: 'pass', source: 'Google Drive', category: 'CC6: Data Classification' },
+  { id: 'CC6.1-2', title: 'Production Data in Non-Prod', detail: 'PII detected in staging database (2 email addresses). Violates data classification policy.', status: 'warn', source: 'AWS RDS', category: 'CC6: Data Classification' },
+  { id: 'CC7.1-1', title: 'Background Checks', detail: 'All 86 employees: background checks completed within 30 days of hire. 100% compliant.', status: 'pass', source: 'HR System', category: 'CC7: Personnel' },
+  { id: 'CC7.1-2', title: 'Security Training', detail: 'Annual security awareness training: 94% completion. 5 employees overdue (2-4 weeks).', status: 'warn', source: 'LMS', category: 'CC7: Personnel' },
+];
+
+function renderEvidence() {
+  const el = document.getElementById('evidenceList');
+  const cats = {};
+  for (const e of evidence) {
+    if (!cats[e.category]) cats[e.category] = [];
+    cats[e.category].push(e);
+  }
+
+  let html = '';
+  for (const [cat, items] of Object.entries(cats)) {
+    html += `<div style="font-weight:700;font-size:0.75rem;color:var(--accent);padding:6px 0;margin-top:8px;">${cat}</div>`;
+    for (const item of items) {
+      const icon = item.status === 'pass' ? '✓' : item.status === 'fail' ? '✗' : '⚠';
+      const cls = `check-${item.status}`;
+      html += `<div class="evidence-row">
+        <div class="check ${cls}">${icon}</div>
+        <div class="info"><div class="title">${item.title}</div><div class="detail">${item.detail}</div></div>
+        <div class="source">${item.source}</div>
+      </div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+function runAllChecks() {
+  toast('🔄 Running full evidence scan across 5 providers...');
+  setTimeout(() => {
+    updateStats();
+    toast('✅ Scan complete. 19 checks, 12 passed, 4 failed, 3 warnings.');
+  }, 1500);
+}
+
+function updateStats() {
+  const pass = evidence.filter(e => e.status === 'pass').length;
+  const fail = evidence.filter(e => e.status === 'fail').length;
+  const warn = evidence.filter(e => e.status === 'warn').length;
+  const total = evidence.length;
+  const score = Math.round((pass + warn * 0.5) / total * 100);
+  document.getElementById('sPass').textContent = pass;
+  document.getElementById('sFail').textContent = fail;
+  document.getElementById('sWarn').textContent = warn;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sScore').textContent = score + '%';
+}
+
+function exportReport() {
+  const reportText = document.getElementById('reportPreview').innerText;
+  const blob = new Blob([reportText], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `soc2-evidence-report-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('📥 Report exported.');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+renderEvidence();
+updateStats();
+</script>
+</body>
+</html>
