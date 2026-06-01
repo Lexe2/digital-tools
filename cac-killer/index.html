@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAC Killer — Find & Kill Unprofitable Ad Spend in 60 Days</title>
+<style>
+:root{--bg:#0a0e15;--surface:#111827;--card:#1a1f2e;--border:#2a2f3e;--accent:#6366f1;--accent2:#818cf8;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--text:#e2e8f0;--dim:#94a3b8;--font:system-ui,-apple-system,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6}
+.container{max-width:960px;margin:0 auto;padding:20px}
+h1{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.subtitle{color:var(--dim);font-size:.95rem;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.card h2{font-size:1.15rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card h2 .icon{width:24px;height:24px;background:var(--accent);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+label{display:block;font-size:.8rem;color:var(--dim);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+input,select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:.95rem;outline:none;transition:border .2s}
+input:focus,select:focus{border-color:var(--accent)}
+.metric{background:var(--surface);border-radius:10px;padding:16px;text-align:center;transition:transform .2s}
+.metric:hover{transform:translateY(-2px)}
+.metric .value{font-size:1.6rem;font-weight:800;margin-bottom:2px}
+.metric .label{font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.metric.good .value{color:var(--green)}
+.metric.bad .value{color:var(--red)}
+.metric.warn .value{color:var(--orange)}
+.metric.neutral .value{color:var(--accent2)}
+button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;width:100%}
+button:hover{background:var(--accent2);transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+.btn-secondary{background:var(--surface);border:1px solid var(--border);width:auto;padding:8px 16px;font-size:.85rem;display:inline-block}
+.btn-secondary:hover{background:var(--card);transform:none}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent);width:auto;padding:10px 20px;font-size:.9rem;display:inline-block}
+.btn-outline:hover{background:var(--accent);color:#fff}
+.btn-green{background:var(--green)}
+.btn-green:hover{background:#059669}
+.btn-red{background:var(--red);font-size:.8rem;padding:6px 12px;width:auto}
+.btn-red:hover{background:#dc2626}
+.btn-sm{font-size:.8rem;padding:6px 12px;width:auto;background:var(--surface);border:1px solid var(--border)}
+.btn-sm:hover{background:var(--card);transform:none}
+.verdict{padding:20px;border-radius:12px;margin-top:16px;font-weight:600;font-size:1.05rem;text-align:center}
+.verdict.good{background:rgba(16,185,129,.15);border:1px solid var(--green);color:var(--green)}
+.verdict.bad{background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red)}
+.verdict.warn{background:rgba(245,158,11,.15);border:1px solid var(--orange);color:var(--orange)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700}
+.tag.kill{background:rgba(239,68,68,.2);color:var(--red)}
+.tag.keep{background:rgba(16,185,129,.2);color:var(--green)}
+.tag.test{background:rgba(245,158,11,.2);color:var(--orange)}
+.reco{background:var(--surface);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;margin-top:8px;font-size:.88rem;line-height:1.6}
+.reco strong{color:var(--accent2)}
+.reco.burn{border-left-color:var(--red)}
+.reco.burn strong{color:var(--red)}
+.reco.scale{border-left-color:var(--green)}
+.reco.scale strong{color:var(--green)}
+.waste-bar{height:24px;border-radius:4px;background:var(--surface);overflow:hidden;margin-top:4px}
+.waste-fill{height:100%;border-radius:4px;transition:width .5s}
+.hidden{display:none}
+.step-indicator{display:flex;gap:4px;margin-bottom:24px;position:relative}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.step .bar{height:4px;border-radius:2px;background:var(--border);width:100%;transition:background .3s}
+.step .bar.active{background:var(--accent)}
+.step .bar.done{background:var(--green)}
+.step .num{font-size:.6rem;color:var(--dim);margin-top:2px;transition:color .3s}
+.step.active .num{color:var(--accent);font-weight:700}
+.step.done .num{color:var(--green)}
+#results,#channelResults,#wasteResults,#loadedCacResults{display:none}
+.footer{text-align:center;color:var(--dim);font-size:.8rem;margin-top:32px;padding:16px}
+.back-row{margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.scenario-row{display:grid;grid-template-columns:1fr 1fr 2fr 2fr auto;gap:8px;margin-bottom:8px;align-items:end}
+.scenario-row .del-btn{width:36px;height:36px;padding:0;background:var(--red);border-radius:8px;font-size:16px;flex-shrink:0}
+.bench-table{width:100%;font-size:.85rem;margin-top:12px}
+.bench-table td,.bench-table th{padding:6px 10px}
+.bench-you{color:var(--accent2);font-weight:700}
+.roi-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.roi-box{background:var(--surface);border-radius:10px;padding:20px;text-align:center;transition:transform .2s}
+.roi-box:hover{transform:translateY(-2px)}
+.roi-box .big{font-size:2rem;font-weight:800}
+.roi-box .sub{font-size:.8rem;color:var(--dim);margin-top:4px}
+.saved-badge{display:inline-block;background:var(--green);color:#fff;font-size:.7rem;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:600;opacity:0;transition:opacity .3s}
+.saved-badge.show{opacity:1}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.checklist-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex-shrink:0}
+.checklist-item .label{flex:1;font-size:.88rem}
+.checklist-item .priority{font-size:.7rem;font-weight:700;text-transform:uppercase}
+@media(max-width:600px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr !important}
+  .scenario-row{grid-template-columns:1fr 1fr !important}
+  .step .num{font-size:.5rem}
+  h1{font-size:1.5rem}
+  .metric .value{font-size:1.3rem}
+  .card{padding:16px}
+  .roi-box .big{font-size:1.5rem}
+}
+@media print{
+  body{background:#fff !important;color:#000 !important}
+  .container{max-width:100%}
+  .card{background:#fff !important;border:1px solid #ddd !important;break-inside:avoid}
+  .step-indicator,.back-row,button,.btn-secondary,.btn-outline,.btn-green,.btn-red{display:none !important}
+  .hidden{display:none !important}
+  .metric{background:#f5f5f5 !important}
+  .metric .value{color:#000 !important}
+  .metric.good .value{color:#059669 !important}
+  .metric.bad .value{color:#dc2626 !important}
+  .metric.warn .value{color:#d97706 !important}
+  .verdict.good{background:#ecfdf5 !important;border-color:#059669 !important;color:#059669 !important}
+  .verdict.bad{background:#fef2f2 !important;border-color:#dc2626 !important;color:#dc2626 !important}
+  .verdict.warn{background:#fffbeb !important;border-color:#d97706 !important;color:#d97706 !important}
+  .reco{background:#f9fafb !important;border-left-color:#6366f1 !important;color:#000 !important}
+  .reco.burn{border-left-color:#dc2626 !important}
+  .reco.scale{border-left-color:#059669 !important}
+  .saved-badge{display:none !important}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>CAC Killer</h1>
+<p class="subtitle">Find & kill unprofitable ad spend. Achieve profitable acquisition in 60 days without burning $50K on campaigns that don't convert. <span class="saved-badge" id="savedBadge">Saved</span></p>
+
+<div class="step-indicator">
+  <div class="step active" id="s1" onclick="goToStep(1)"><div class="bar active" id="b1"></div><div class="num">Health</div></div>
+  <div class="step" id="s2" onclick="goToStep(2)"><div class="bar" id="b2"></div><div class="num">Channels</div></div>
+  <div class="step" id="s3" onclick="goToStep(3)"><div class="bar" id="b3"></div><div class="num">Waste</div></div>
+  <div class="step" id="s4" onclick="goToStep(4)"><div class="bar" id="b4"></div><div class="num">Bench</div></div>
+  <div class="step" id="s5" onclick="goToStep(5)"><div class="bar" id="b5"></div><div class="num">What If</div></div>
+  <div class="step" id="s6" onclick="goToStep(6)"><div class="bar" id="b6"></div><div class="num">Loaded</div></div>
+  <div class="step" id="s7" onclick="goToStep(7)"><div class="bar" id="b7"></div><div class="num">Plan</div></div>
+</div>
+
+<!-- STEP 1: CAC/LTV Calculator -->
+<div id="calcSection">
+<div class="card">
+  <h2><span class="icon">1</span> CAC / LTV Health Check</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Enter your numbers. No vanity metrics — raw data only.</p>
+  <div class="grid2">
+    <div>
+      <label>Monthly Ad Spend ($)</label>
+      <input type="number" id="adSpend" value="5000" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>New Customers / Month</label>
+      <input type="number" id="newCust" value="25" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Avg Revenue Per Customer ($)</label>
+      <input type="number" id="revPerCust" value="240" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Avg Customer Lifespan (months)</label>
+      <input type="number" id="lifespan" value="18" min="1" oninput="autoSave()">
+    </div>
+  </div>
+  <div style="margin-top:16px">
+    <label>Gross Margin (%)</label>
+    <input type="number" id="grossMargin" value="70" min="0" max="100" oninput="autoSave()">
+  </div>
+  <button onclick="calcHealth()" style="margin-top:16px">Calculate CAC Health</button>
+
+  <div id="results">
+    <div style="margin-top:20px">
+      <div class="grid3">
+        <div class="metric" id="cacMetric">
+          <div class="value" id="cacVal">—</div>
+          <div class="label">CAC</div>
+        </div>
+        <div class="metric" id="ltvMetric">
+          <div class="value" id="ltvVal">—</div>
+          <div class="label">LTV</div>
+        </div>
+        <div class="metric" id="ratioMetric">
+          <div class="value" id="ratioVal">—</div>
+          <div class="label">LTV:CAC Ratio</div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="metric" id="paybackMetric">
+          <div class="value" id="paybackVal">—</div>
+          <div class="label">CAC Payback (months)</div>
+        </div>
+        <div class="metric" id="ltvCacMetric">
+          <div class="value" id="ltvCacVal">—</div>
+          <div class="label">Monthly Unit Profit</div>
+        </div>
+      </div>
+      <div id="verdict" class="verdict"></div>
+      <div id="reco1" class="reco"></div>
+    </div>
+  </div>
+</div>
+
+<button onclick="goStep2()">Next: Channel Attribution →</button>
+</div>
+
+<!-- STEP 2: Channel Attribution -->
+<div id="channelSection" class="hidden">
+<div class="back-row">
+  <button class="btn-secondary" onclick="backToStep1()">← Health Check</button>
+  <button class="btn-sm" onclick="resetAll()">↻ Start Over</button>
+</div>
+<div class="card">
+  <h2><span class="icon">2</span> Channel Attribution — Where's Your Money Going?</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Add each ad channel. Be honest — include the ones you're unsure about.</p>
+  <div id="channelRows"></div>
+  <button onclick="addChannel()" style="margin-top:12px;background:var(--surface);border:1px solid var(--border)">+ Add Channel</button>
+
+  <div id="channelResults">
+    <h3 style="margin-top:20px;margin-bottom:12px;font-size:.95rem">Channel Breakdown</h3>
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>Channel</th><th>Spend</th><th>Customers</th><th>CAC</th><th>LTV:CAC</th><th>Verdict</th></tr>
+      </thead>
+      <tbody id="channelBody"></tbody>
+    </table>
+    </div>
+    <div id="channelRecos"></div>
+  </div>
+</div>
+
+<button onclick="goStep3()">Next: Waste Finder →</button>
+</div>
+
+<!-- STEP 3: Waste Finder -->
+<div id="wasteSection" class="hidden">
+<div class="back-row">
+  <button class="btn-secondary" onclick="backToStep2()">← Channels</button>
+  <button class="btn-sm" onclick="resetAll()">↻ Start Over</button>
+</div>
+<div class="card">
+  <h2><span class="icon">3</span> Waste Finder — How Much Are You Burning?</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Based on your data, here's the cash you're lighting on fire.</p>
+
+  <div id="wasteResults">
+    <div class="grid2" style="margin-top:12px">
+      <div class="metric bad">
+        <div class="value" id="wasteAmt">—</div>
+        <div class="label">Monthly Waste</div>
+      </div>
+      <div class="metric bad">
+        <div class="value" id="wasteAnnual">—</div>
+        <div class="label">Annual Waste</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <h3 style="font-size:.95rem;margin-bottom:12px">Waste Breakdown</h3>
+      <div id="wasteBreakdown"></div>
+    </div>
+
+    <div style="margin-top:20px">
+      <h3 style="font-size:.95rem;margin-bottom:12px">60-Day Fix Plan</h3>
+      <div id="fixPlan"></div>
+    </div>
+  </div>
+</div>
+
+<button onclick="goStep4()">Next: Industry Benchmarks →</button>
+</div>
+
+<!-- STEP 4: Industry Benchmarks -->
+<div id="benchSection" class="hidden">
+<div class="back-row">
+  <button class="btn-secondary" onclick="backToStep3()">← Waste Finder</button>
+  <button class="btn-sm" onclick="resetAll()">↻ Start Over</button>
+</div>
+<div class="card">
+  <h2><span class="icon">4</span> Industry Benchmarks — How Do You Compare?</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">See where your LTV:CAC stacks up. Your numbers are highlighted in the table.</p>
+
+  <div style="margin-bottom:16px">
+    <label>Select Your Industry</label>
+    <select id="industrySelect" onchange="renderBenchmarks();autoSave()">
+      <option value="saas">SaaS (B2B)</option>
+      <option value="ecommerce">E-commerce</option>
+      <option value="agency">Agency / Professional Services</option>
+      <option value="healthtech">HealthTech</option>
+      <option value="fintech">FinTech</option>
+      <option value="edtech">EdTech</option>
+      <option value="marketplace">Marketplace</option>
+      <option value="d2c">D2C / Consumer Brand</option>
+    </select>
+  </div>
+
+  <div id="benchContent"></div>
+
+  <div style="margin-top:20px" id="benchVerdict"></div>
+</div>
+
+<button onclick="goStep5()">Next: Scenario Simulator →</button>
+</div>
+
+<!-- STEP 5: Scenario Simulator & ROI -->
+<div id="scenarioSection" class="hidden">
+<div class="back-row">
+  <button class="btn-secondary" onclick="backToStep4()">← Benchmarks</button>
+  <button class="btn-sm" onclick="resetAll()">↻ Start Over</button>
+</div>
+<div class="card">
+  <h2><span class="icon">5</span> Scenario Simulator — What If?</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Change your numbers and see projected 12-month P&L. No more guessing.</p>
+
+  <div style="margin-bottom:16px">
+    <label>Scenario Name</label>
+    <input type="text" id="scenarioName" value="Optimistic Plan" placeholder="e.g. Cut Google Ads 50%" oninput="autoSave()">
+  </div>
+
+  <div id="scenarioRows"></div>
+  <button onclick="addScenario()" style="margin-top:8px;background:var(--surface);border:1px solid var(--border)">+ Add Scenario</button>
+
+  <div id="scenarioResults" style="margin-top:20px">
+    <h3 style="font-size:.95rem;margin-bottom:12px">12-Month Projected P&L</h3>
+    <div style="overflow-x:auto">
+    <div id="scenarioTable"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="icon">$</span> ROI Calculator — Is This Tool Worth It?</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Based on your data, here's what CAC Killer saves you.</p>
+
+  <div class="roi-grid">
+    <div class="roi-box">
+      <div class="big" id="roiSavings" style="color:var(--green)">—</div>
+      <div class="sub">Projected Annual Savings</div>
+    </div>
+    <div class="roi-box">
+      <div class="big" id="roiMultiple" style="color:var(--accent2)">—</div>
+      <div class="sub">ROI Multiple on $149</div>
+    </div>
+  </div>
+
+  <div id="roiBreakdown" style="margin-top:20px"></div>
+</div>
+
+<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn-green" onclick="exportReport()" style="flex:1;min-width:200px">Export Audit Report (PDF)</button>
+  <button class="btn-outline" onclick="exportReportText()" style="flex:1;min-width:200px">Export as Text</button>
+</div>
+<button onclick="goStep6()" style="margin-top:12px">Next: Loaded CAC Calculator →</button>
+</div>
+
+<!-- STEP 6: Loaded CAC Calculator -->
+<div id="loadedCacSection" class="hidden">
+<div class="back-row">
+  <button class="btn-secondary" onclick="backToStep5()">← Scenarios</button>
+  <button class="btn-sm" onclick="resetAll()">↻ Start Over</button>
+</div>
+<div class="card">
+  <h2><span class="icon">6</span> Loaded CAC Calculator — The Real Cost of Acquisition</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Blended CAC hides the truth. Loaded CAC includes salary, tools, creative, and overhead. Most founders underestimate by 2-4x.</p>
+
+  <div class="grid2">
+    <div>
+      <label>Monthly Ad Spend ($)</label>
+      <input type="number" id="lcAdSpend" value="5000" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>New Customers / Month</label>
+      <input type="number" id="lcNewCust" value="25" min="1" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Marketing Team Salaries ($/mo)</label>
+      <input type="number" id="lcSalaries" value="0" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Marketing Tools & Software ($/mo)</label>
+      <input type="number" id="lcTools" value="0" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Creative / Content Production ($/mo)</label>
+      <input type="number" id="lcCreative" value="0" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Agency / Freelance Fees ($/mo)</label>
+      <input type="number" id="lcAgency" value="0" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Attribution / Analytics ($/mo)</label>
+      <input type="number" id="lcAnalytics" value="0" min="0" oninput="autoSave()">
+    </div>
+    <div>
+      <label>Other Acquisition Costs ($/mo)</label>
+      <input type="number" id="lcOther" value="0" min="0" oninput="autoSave()">
+    </div>
+  </div>
+
+  <button onclick="calcLoadedCAC()" style="margin-top:16px">Calculate Loaded CAC</button>
+
+  <div id="loadedCacResults" style="display:none">
+    <div style="margin-top:20px">
+      <div class="grid3">
+        <div class="metric" id="blendedCacMetric">
+          <div class="value" id="blendedCacVal">—</div>
+          <div class="label">Blended CAC</div>
+        </div>
+        <div class="metric" id="loadedCacMetric">
+          <div class="value" id="loadedCacVal">—</div>
+          <div class="label">Loaded CAC</div>
+        </div>
+        <div class="metric" id="loadedLtvMetric">
+          <div class="value" id="loadedLtvVal">—</div>
+          <div class="label">Real LTV:CAC</div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="metric" id="loadedMultiplierMetric">
+          <div class="value" id="loadedMultiplierVal">—</div>
+          <div class="label">True Cost Multiplier</div>
+        </div>
+        <div class="metric" id="loadedProfitMetric">
+          <div class="value" id="loadedProfitVal">—</div>
+          <div class="label">Real Unit Profit / Loss</div>
+        </div>
+      </div>
+
+      <div id="loadedCacVerdict" class="verdict" style="margin-top:16px"></div>
+      <div id="loadedCacBreakdown" style="margin-top:16px"></div>
+      <div id="loadedCacRecos" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<button onclick="goStep7()">Next: CAC Playbook →</button>
+</div>
+
+<!-- STEP 7: CAC Playbook -->
+<div id="playbookSection" class="hidden">
+<div class="back-row">
+  <button class="btn-secondary" onclick="backToStep6()">← Loaded CAC</button>
+  <button class="btn-sm" onclick="resetAll()">↻ Start Over</button>
+</div>
+<div class="card">
+  <h2><span class="icon">7</span> CAC Playbook — Your 60-Day Kill Plan</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Based on everything you've entered, here's your personalized action plan with week-by-week tactics.</p>
+
+  <div id="playbookContent"></div>
+</div>
+
+<div class="card">
+  <h2><span class="icon">★</span> Quick-Win Checklist</h2>
+  <p style="color:var(--dim);font-size:.88rem;margin-bottom:16px">Things you can do <strong>today</strong> to start reducing CAC.</p>
+  <div id="quickWinChecklist"></div>
+</div>
+
+<div class="card">
+  <h2><span class="icon">∑</span> Full Audit Summary</h2>
+  <div id="fullSummary"></div>
+</div>
+
+<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn-green" onclick="exportFullReport()" style="flex:1;min-width:200px">Export Full Report (PDF)</button>
+  <button class="btn-outline" onclick="exportReportText()" style="flex:1;min-width:200px">Export as Text</button>
+</div>
+</div>
+
+</div>
+
+<div class="footer">CAC Killer — Stop burning money on unprofitable ads.</div>
+
+<script>
+// ─── LOCAL STORAGE ───
+const STORAGE_KEY = 'cackiller_data';
+let saveTimeout;
+function autoSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    const data = {
+      adSpend: document.getElementById('adSpend').value,
+      newCust: document.getElementById('newCust').value,
+      revPerCust: document.getElementById('revPerCust').value,
+      lifespan: document.getElementById('lifespan').value,
+      grossMargin: document.getElementById('grossMargin').value,
+      industry: document.getElementById('industrySelect').value,
+      channels: channels,
+      scenarios: scenarios,
+      lcAdSpend: document.getElementById('lcAdSpend').value,
+      lcNewCust: document.getElementById('lcNewCust').value,
+      lcSalaries: document.getElementById('lcSalaries').value,
+      lcTools: document.getElementById('lcTools').value,
+      lcCreative: document.getElementById('lcCreative').value,
+      lcAgency: document.getElementById('lcAgency').value,
+      lcAnalytics: document.getElementById('lcAnalytics').value,
+      lcOther: document.getElementById('lcOther').value
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    const badge = document.getElementById('savedBadge');
+    badge.classList.add('show');
+    setTimeout(() => badge.classList.remove('show'), 1500);
+  }, 500);
+}
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.adSpend) document.getElementById('adSpend').value = data.adSpend;
+    if (data.newCust) document.getElementById('newCust').value = data.newCust;
+    if (data.revPerCust) document.getElementById('revPerCust').value = data.revPerCust;
+    if (data.lifespan) document.getElementById('lifespan').value = data.lifespan;
+    if (data.grossMargin) document.getElementById('grossMargin').value = data.grossMargin;
+    if (data.industry) document.getElementById('industrySelect').value = data.industry;
+    if (data.channels && data.channels.length) channels = data.channels;
+    if (data.scenarios && data.scenarios.length) scenarios = data.scenarios;
+    if (data.lcAdSpend) document.getElementById('lcAdSpend').value = data.lcAdSpend;
+    else prefillLoadedCAC();
+    if (data.lcNewCust) document.getElementById('lcNewCust').value = data.lcNewCust;
+    if (data.lcSalaries) document.getElementById('lcSalaries').value = data.lcSalaries;
+    if (data.lcTools) document.getElementById('lcTools').value = data.lcTools;
+    if (data.lcCreative) document.getElementById('lcCreative').value = data.lcCreative;
+    if (data.lcAgency) document.getElementById('lcAgency').value = data.lcAgency;
+    if (data.lcAnalytics) document.getElementById('lcAnalytics').value = data.lcAnalytics;
+    if (data.lcOther) document.getElementById('lcOther').value = data.lcOther;
+    renderChannels();
+    renderScenarios();
+  } catch(e) {}
+}
+
+function resetAll() {
+  if (!confirm('Start over? This will clear all your data.')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  location.reload();
+}
+
+// ─── URL HASH SHARE ───
+function generateShareURL() {
+  const r = ltvRatio();
+  const chData = channels.filter(c => c.name).map(c => `${c.name}:${c.spend}:${c.cust}`).join(',');
+  const hash = `ad=${r.adSpend}&nc=${r.newCust}&rev=${r.revPerCust}&ls=${r.lifespan}&gm=${r.margin*100}&ind=${document.getElementById('industrySelect').value}&ch=${chData}`;
+  return window.location.origin + window.location.pathname + '#' + btoa(unescape(encodeURIComponent(hash)));
+}
+
+// ─── DATA ───
+const BENCHMARKS = {
+  saas: {
+    name: 'SaaS (B2B)',
+    avgCAC: [200, 500], avgLTV: [5000, 15000], avgRatio: [3, 5],
+    avgPayback: [12, 18], churn: [3, 7],
+    avgGrossMargin: [70, 85], avgExpansionRevenue: [15, 30], avgNetRetention: [90, 120],
+    cplRanges: { google: [30, 120], linkedin: [50, 200], content: [20, 80], referral: [5, 50] },
+    conversionRates: { landing: [2, 5], demo: [15, 30], trial: [10, 25], mql: [8, 15] },
+    tiers: [
+      { label: 'Top 10%', cac: '$100-300', ratio: '> 5:1', payback: '< 6 mo', ltv: '$15K+', grossMargin: '> 80%', netRetention: '> 110%' },
+      { label: 'Good', cac: '$300-700', ratio: '3-5:1', payback: '6-12 mo', ltv: '$8-15K', grossMargin: '70-80%', netRetention: '95-110%' },
+      { label: 'Average', cac: '$700-1,500', ratio: '1.5-3:1', payback: '12-18 mo', ltv: '$3-8K', grossMargin: '60-70%', netRetention: '80-95%' },
+      { label: 'Poor', cac: '$1,500+', ratio: '< 1.5:1', payback: '18+ mo', ltv: '< $3K', grossMargin: '< 60%', netRetention: '< 80%' },
+    ]
+  },
+  ecommerce: {
+    name: 'E-commerce',
+    avgCAC: [15, 50], avgLTV: [80, 300], avgRatio: [3, 5],
+    avgPayback: [1, 3], churn: [5, 10],
+    avgGrossMargin: [40, 65], avgExpansionRevenue: [5, 15], avgNetRetention: [50, 70],
+    cplRanges: { google: [5, 25], meta: [8, 35], tiktok: [3, 20], email: [1, 5] },
+    conversionRates: { landing: [2, 6], checkout: [1, 4], cart: [60, 80], repeat: [15, 35] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $15', ratio: '> 5:1', payback: '< 1 mo', ltv: '$300+', grossMargin: '> 60%', netRetention: '> 65%' },
+      { label: 'Good', cac: '$15-30', ratio: '3-5:1', payback: '1-2 mo', ltv: '$150-300', grossMargin: '50-60%', netRetention: '50-65%' },
+      { label: 'Average', cac: '$30-60', ratio: '1.5-3:1', payback: '2-4 mo', ltv: '$60-150', grossMargin: '40-50%', netRetention: '35-50%' },
+      { label: 'Poor', cac: '$60+', ratio: '< 1.5:1', payback: '4+ mo', ltv: '< $60', grossMargin: '< 40%', netRetention: '< 35%' },
+    ]
+  },
+  agency: {
+    name: 'Agency / Professional Services',
+    avgCAC: [300, 800], avgLTV: [5000, 25000], avgRatio: [4, 8],
+    avgPayback: [1, 3], churn: [10, 20],
+    avgGrossMargin: [50, 70], avgExpansionRevenue: [10, 25], avgNetRetention: [85, 110],
+    cplRanges: { google: [40, 150], linkedin: [60, 250], referral: [10, 80], events: [80, 300] },
+    conversionRates: { landing: [3, 7], proposal: [20, 40], discovery: [30, 50], referral: [40, 60] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $200', ratio: '> 8:1', payback: '< 1 mo', ltv: '$25K+', grossMargin: '> 65%', netRetention: '> 100%' },
+      { label: 'Good', cac: '$200-500', ratio: '4-8:1', payback: '1-3 mo', ltv: '$10-25K', grossMargin: '50-65%', netRetention: '90-100%' },
+      { label: 'Average', cac: '$500-1,200', ratio: '2-4:1', payback: '3-6 mo', ltv: '$5-10K', grossMargin: '40-50%', netRetention: '75-90%' },
+      { label: 'Poor', cac: '$1,200+', ratio: '< 2:1', payback: '6+ mo', ltv: '< $5K', grossMargin: '< 40%', netRetention: '< 75%' },
+    ]
+  },
+  healthtech: {
+    name: 'HealthTech',
+    avgCAC: [300, 600], avgLTV: [4000, 12000], avgRatio: [3, 5],
+    avgPayback: [8, 16], churn: [5, 10],
+    avgGrossMargin: [60, 80], avgExpansionRevenue: [10, 20], avgNetRetention: [95, 115],
+    cplRanges: { google: [30, 100], linkedin: [50, 180], content: [15, 60], partnerships: [20, 70] },
+    conversionRates: { landing: [2, 5], demo: [12, 28], trial: [8, 18], referral: [15, 35] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $200', ratio: '> 5:1', payback: '< 6 mo', ltv: '$12K+', grossMargin: '> 75%', netRetention: '> 110%' },
+      { label: 'Good', cac: '$200-500', ratio: '3-5:1', payback: '6-12 mo', ltv: '$6-12K', grossMargin: '65-75%', netRetention: '100-110%' },
+      { label: 'Average', cac: '$500-1,000', ratio: '1.5-3:1', payback: '12-18 mo', ltv: '$2-6K', grossMargin: '55-65%', netRetention: '85-100%' },
+      { label: 'Poor', cac: '$1,000+', ratio: '< 1.5:1', payback: '18+ mo', ltv: '< $2K', grossMargin: '< 55%', netRetention: '< 85%' },
+    ]
+  },
+  fintech: {
+    name: 'FinTech',
+    avgCAC: [200, 500], avgLTV: [3000, 10000], avgRatio: [3, 5],
+    avgPayback: [6, 14], churn: [3, 8],
+    avgGrossMargin: [60, 80], avgExpansionRevenue: [10, 25], avgNetRetention: [95, 130],
+    cplRanges: { google: [25, 90], meta: [15, 60], seo: [10, 50], partnership: [20, 80] },
+    conversionRates: { landing: [1.5, 4], signup: [3, 8], funded: [25, 40], activation: [15, 30] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $150', ratio: '> 5:1', payback: '< 4 mo', ltv: '$10K+', grossMargin: '> 75%', netRetention: '> 120%' },
+      { label: 'Good', cac: '$150-400', ratio: '3-5:1', payback: '4-8 mo', ltv: '$5-10K', grossMargin: '65-75%', netRetention: '105-120%' },
+      { label: 'Average', cac: '$400-800', ratio: '1.5-3:1', payback: '8-14 mo', ltv: '$2-5K', grossMargin: '55-65%', netRetention: '90-105%' },
+      { label: 'Poor', cac: '$800+', ratio: '< 1.5:1', payback: '14+ mo', ltv: '< $2K', grossMargin: '< 55%', netRetention: '< 90%' },
+    ]
+  },
+  edtech: {
+    name: 'EdTech',
+    avgCAC: [50, 200], avgLTV: [500, 3000], avgRatio: [3, 6],
+    avgPayback: [2, 6], churn: [6, 12],
+    avgGrossMargin: [65, 85], avgExpansionRevenue: [5, 15], avgNetRetention: [70, 95],
+    cplRanges: { google: [10, 50], meta: [8, 40], youtube: [5, 30], referral: [3, 25] },
+    conversionRates: { landing: [2, 6], signup: [5, 15], paidConversion: [2, 8], completion: [30, 60] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $40', ratio: '> 6:1', payback: '< 2 mo', ltv: '$3K+', grossMargin: '> 80%', netRetention: '> 90%' },
+      { label: 'Good', cac: '$40-120', ratio: '3-6:1', payback: '2-4 mo', ltv: '$1-3K', grossMargin: '70-80%', netRetention: '80-90%' },
+      { label: 'Average', cac: '$120-250', ratio: '1.5-3:1', payback: '4-8 mo', ltv: '$500-1K', grossMargin: '60-70%', netRetention: '65-80%' },
+      { label: 'Poor', cac: '$250+', ratio: '< 1.5:1', payback: '8+ mo', ltv: '< $500', grossMargin: '< 60%', netRetention: '< 65%' },
+    ]
+  },
+  marketplace: {
+    name: 'Marketplace',
+    avgCAC: [10, 50], avgLTV: [80, 400], avgRatio: [3, 6],
+    avgPayback: [1, 3], churn: [8, 15],
+    avgGrossMargin: [30, 55], avgExpansionRevenue: [8, 20], avgNetRetention: [55, 80],
+    cplRanges: { google: [5, 25], meta: [3, 18], referral: [2, 12], seo: [1, 8] },
+    conversionRates: { landing: [3, 8], signup: [10, 25], firstTransaction: [15, 35], repeat: [20, 40] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $8', ratio: '> 6:1', payback: '< 1 mo', ltv: '$400+', grossMargin: '> 50%', netRetention: '> 75%' },
+      { label: 'Good', cac: '$8-25', ratio: '3-6:1', payback: '1-2 mo', ltv: '$200-400', grossMargin: '40-50%', netRetention: '60-75%' },
+      { label: 'Average', cac: '$25-60', ratio: '1.5-3:1', payback: '2-4 mo', ltv: '$80-200', grossMargin: '30-40%', netRetention: '45-60%' },
+      { label: 'Poor', cac: '$60+', ratio: '< 1.5:1', payback: '4+ mo', ltv: '< $80', grossMargin: '< 30%', netRetention: '< 45%' },
+    ]
+  },
+  d2c: {
+    name: 'D2C / Consumer Brand',
+    avgCAC: [20, 80], avgLTV: [100, 500], avgRatio: [3, 5],
+    avgPayback: [1, 3], churn: [8, 18],
+    avgGrossMargin: [50, 75], avgExpansionRevenue: [5, 20], avgNetRetention: [40, 65],
+    cplRanges: { meta: [8, 40], google: [10, 50], tiktok: [5, 30], influencer: [3, 25] },
+    conversionRates: { landing: [2, 5], checkout: [1.5, 4], repeat: [15, 30], referral: [5, 15] },
+    tiers: [
+      { label: 'Top 10%', cac: '< $15', ratio: '> 5:1', payback: '< 1 mo', ltv: '$500+', grossMargin: '> 70%', netRetention: '> 60%' },
+      { label: 'Good', cac: '$15-40', ratio: '3-5:1', payback: '1-2 mo', ltv: '$200-500', grossMargin: '60-70%', netRetention: '45-60%' },
+      { label: 'Average', cac: '$40-80', ratio: '1.5-3:1', payback: '2-4 mo', ltv: '$100-200', grossMargin: '50-60%', netRetention: '30-45%' },
+      { label: 'Poor', cac: '$80+', ratio: '< 1.5:1', payback: '4+ mo', ltv: '< $100', grossMargin: '< 50%', netRetention: '< 30%' },
+    ]
+  }
+};
+
+// ─── CORE CALC ───
+const ltvRatio = () => {
+  const margin = parseFloat(document.getElementById('grossMargin').value) || 70;
+  const lifespan = parseFloat(document.getElementById('lifespan').value) || 18;
+  const revPerCust = parseFloat(document.getElementById('revPerCust').value) || 240;
+  const adSpend = parseFloat(document.getElementById('adSpend').value) || 5000;
+  const newCust = Math.max(parseFloat(document.getElementById('newCust').value) || 25, 1);
+  const ltv = revPerCust * lifespan * (margin / 100);
+  const cac = adSpend / newCust;
+  const ratio = ltv / Math.max(cac, 0.001);
+  return { ltv, cac, ratio, margin: margin / 100, adSpend, newCust, revPerCust, lifespan };
+};
+
+let channels = [{ name: '', spend: 0, cust: 0 }];
+let scenarios = [{ name: 'Current Plan', spend: 0, cust: 0 }];
+let currentStep = 1;
+
+// ─── STEP 1 ───
+function calcHealth() {
+  const r = ltvRatio();
+  document.getElementById('cacVal').textContent = '$' + r.cac.toFixed(0);
+  document.getElementById('ltvVal').textContent = '$' + r.ltv.toFixed(0);
+  document.getElementById('ratioVal').textContent = r.ratio.toFixed(1) + ':1';
+  const monthlyProfit = (r.ltv / r.lifespan) - (r.cac / 1);
+  document.getElementById('ltvCacVal').textContent = (monthlyProfit >= 0 ? '+$' : '-$') + Math.abs(monthlyProfit).toFixed(0) + '/mo';
+  const payback = r.cac / (r.ltv / r.lifespan);
+  document.getElementById('paybackVal').textContent = payback.toFixed(1) + ' mo';
+
+  const m = document.getElementById('ratioMetric');
+  const v = document.getElementById('verdict');
+  const rec = document.getElementById('reco1');
+
+  if (r.ratio < 1) {
+    m.className = 'metric bad'; v.className = 'verdict bad'; v.textContent = 'CRITICAL — You lose money on every customer.';
+    rec.className = 'reco burn'; rec.innerHTML = '<strong>Kill or pause all paid acquisition immediately.</strong> Your CAC ($' + r.cac.toFixed(0) + ') exceeds LTV ($' + r.ltv.toFixed(0) + '). Every new customer costs more than they\'re worth. Switch to referral, organic, and partnership channels.';
+  } else if (r.ratio < 3) {
+    m.className = 'metric warn'; v.className = 'verdict warn'; v.textContent = 'WARNING — Marginal. You\'re profitable but fragile.';
+    rec.className = 'reco'; rec.innerHTML = '<strong>Narrow path.</strong> At ' + r.ratio.toFixed(1) + ':1, you\'re barely covering acquisition costs. Focus on: (1) cutting bottom 20% of ad spend, (2) increasing customer lifespan, (3) upselling existing customers to boost LTV.';
+  } else if (r.ratio < 5) {
+    m.className = 'metric good'; v.className = 'verdict good'; v.textContent = 'HEALTHY — Solid unit economics.';
+    rec.className = 'reco scale'; rec.innerHTML = '<strong>Scale mode.</strong> At ' + r.ratio.toFixed(1) + ':1 LTV:CAC, you have room to increase spend. Test new channels with 20% of budget.';
+  } else {
+    m.className = 'metric good'; v.className = 'verdict good'; v.textContent = 'UNDER-SPENDING — You should be acquiring more.';
+    rec.className = 'reco scale'; rec.innerHTML = '<strong>You\'re leaving money on the table.</strong> At ' + r.ratio.toFixed(1) + ':1, your acquisition is wildly profitable. Double ad spend on current channels. Launch 3-5 new channels.';
+  }
+  document.getElementById('results').style.display = 'block';
+}
+
+// ─── STEP 2 ───
+function renderChannels() {
+  const c = document.getElementById('channelRows');
+  c.innerHTML = channels.map((ch, i) => `
+    <div class="grid3" style="gap:8px;margin-bottom:8px;align-items:end">
+      <div>
+        <label>Channel ${i+1}</label>
+        <input type="text" value="${ch.name}" onchange="channels[${i}].name=this.value;autoSave()" placeholder="e.g. Google Ads">
+      </div>
+      <div>
+        <label>Monthly Spend ($)</label>
+        <input type="number" value="${ch.spend||''}" onchange="channels[${i}].spend=parseFloat(this.value)||0;autoSave()" placeholder="2000">
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1">
+          <label>Customers</label>
+          <input type="number" value="${ch.cust||''}" onchange="channels[${i}].cust=parseFloat(this.value)||0;autoSave()" placeholder="10">
+        </div>
+        ${channels.length > 1 ? `<button onclick="channels.splice(${i},1);renderChannels();autoSave()" class="del-btn" style="width:36px;height:36px;padding:0;background:var(--red);margin-top:auto;border-radius:8px;font-size:16px">✕</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function addChannel() { channels.push({ name: '', spend: 0, cust: 0 }); renderChannels(); autoSave(); }
+
+function syncChannelsFromDOM() {
+  const rows = document.querySelectorAll('#channelRows .grid3');
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs.length >= 3) {
+      channels[i] = { name: inputs[0].value, spend: parseFloat(inputs[1].value) || 0, cust: parseFloat(inputs[2].value) || 0 };
+    }
+  });
+}
+
+function calcChannels() {
+  syncChannelsFromDOM();
+  const r = ltvRatio();
+  const body = document.getElementById('channelBody');
+  const recos = document.getElementById('channelRecos');
+  let html = '', recoHtml = '', totalWaste = 0;
+
+  channels.forEach((ch) => {
+    if (!ch.name || !ch.spend) return;
+    const chCac = ch.spend / Math.max(ch.cust, 0.001);
+    const chRatio = r.ltv / Math.max(chCac, 0.001);
+    let tag, verdict;
+    if (chRatio < 1) {
+      tag = 'kill'; verdict = 'KILL'; totalWaste += ch.spend;
+      recoHtml += `<div class="reco burn"><strong>KILL ${ch.name}:</strong> LTV:CAC is ${chRatio.toFixed(1)}:1. Every $1 spent loses $${(1-chRatio).toFixed(2)}. Redirect $${ch.spend.toLocaleString()}/mo to profitable channels immediately.</div>`;
+    } else if (chRatio < 3) {
+      tag = 'test'; verdict = 'OPTIMIZE';
+      const waste = ch.spend * (1 - chRatio / 3) * 0.4; totalWaste += waste;
+      recoHtml += `<div class="reco"><strong>OPTIMIZE ${ch.name}:</strong> LTV:CAC is ${chRatio.toFixed(1)}:1. Test new audiences, creatives, and landing pages. If not >3:1 in 14 days, cut budget 50%.</div>`;
+    } else {
+      tag = 'keep'; verdict = 'SCALE';
+      recoHtml += `<div class="reco scale"><strong>SCALE ${ch.name}:</strong> LTV:CAC is ${chRatio.toFixed(1)}:1. Increase budget by 50-100%. This channel prints money.</div>`;
+    }
+    html += `<tr><td>${ch.name}</td><td>$${ch.spend.toLocaleString()}</td><td>${ch.cust}</td><td>$${chCac.toFixed(0)}</td><td>${chRatio.toFixed(1)}:1</td><td><span class="tag ${tag}">${verdict}</span></td></tr>`;
+  });
+
+  const attributed = channels.reduce((s, c) => s + c.spend, 0);
+  const totalSpend = r.adSpend;
+  const unattr = totalSpend - attributed;
+  if (unattr > 0) {
+    html += `<tr style="color:var(--orange)"><td>Unattributed</td><td>$${unattr.toLocaleString()}</td><td>?</td><td>?</td><td>?</td><td><span class="tag test">TRACK</span></td></tr>`;
+    totalWaste += unattr * 0.5;
+    recoHtml += `<div class="reco"><strong>FIX ATTRIBUTION:</strong> $${unattr.toLocaleString()}/mo is unaccounted for. Install UTM tracking on all links. Set up conversion tracking in every ad platform.</div>`;
+  }
+
+  body.innerHTML = html; recos.innerHTML = recoHtml;
+  document.getElementById('channelResults').style.display = 'block';
+  window._totalWaste = totalWaste;
+  window._totalSpend = totalSpend;
+}
+
+// ─── STEP 3 ───
+function buildWasteStep() {
+  const waste = window._totalWaste || 0;
+  const spend = window._totalSpend || 0;
+  const r = ltvRatio();
+
+  document.getElementById('wasteAmt').textContent = '$' + waste.toFixed(0);
+  document.getElementById('wasteAnnual').textContent = '$' + (waste * 12).toFixed(0);
+
+  let bd = '';
+  channels.forEach(ch => {
+    if (!ch.name || !ch.spend) return;
+    const chCac = ch.spend / Math.max(ch.cust, 0.001);
+    const chRatio = r.ltv / Math.max(chCac, 0.001);
+    if (chRatio < 1) {
+      bd += `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.88rem"><span>${ch.name}</span><span style="color:var(--red)">$${ch.spend.toLocaleString()}/mo BURNED</span></div><div class="waste-bar"><div class="waste-fill" style="width:${Math.min(100, (1-chRatio)*100).toFixed(0)}%;background:var(--red)"></div></div></div>`;
+    } else if (chRatio < 3) {
+      bd += `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.88rem"><span>${ch.name}</span><span style="color:var(--orange)">$${(ch.spend*0.3).toFixed(0)}/mo at risk</span></div><div class="waste-bar"><div class="waste-fill" style="width:${(ch.spend/Math.max(spend,1)*100).toFixed(0)}%;background:var(--orange)"></div></div></div>`;
+    }
+  });
+  const unattr = spend - channels.reduce((s,c)=>s+c.spend,0);
+  if (unattr > 0) {
+    bd += `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.88rem"><span>Unattributed</span><span style="color:var(--orange)">$${unattr.toLocaleString()}/mo black hole</span></div><div class="waste-bar"><div class="waste-fill" style="width:${(unattr/Math.max(spend,1)*100).toFixed(0)}%;background:var(--orange)"></div></div></div>`;
+  }
+  document.getElementById('wasteBreakdown').innerHTML = bd;
+
+  const plan = [];
+  const killCh = channels.filter(c => c.name && c.spend && (r.ltv / Math.max(c.spend/Math.max(c.cust,.001),.001)) < 1);
+  const scaleCh = channels.filter(c => c.name && c.spend && c.cust && (r.ltv / Math.max(c.spend/Math.max(c.cust,.001),.001)) >= 3);
+  plan.push({ day: 'Day 1-7', action: `Kill ${killCh.length} unprofitable channel${killCh.length!==1?'s':''}. Redirect $${killCh.reduce((s,c)=>s+c.spend,0).toLocaleString()}/mo to proven winners.` });
+  plan.push({ day: 'Day 8-21', action: `Double spend on ${scaleCh.length} winning channel${scaleCh.length!==1?'s':''} ($${scaleCh.reduce((s,c)=>s+c.spend,0).toLocaleString()}/mo). Set up proper tracking on all links.` });
+  plan.push({ day: 'Day 22-45', action: 'Test 2 new channels with recovered budget. $20-50/day micro-campaigns. Kill anything below 2:1 in 7 days.' });
+  plan.push({ day: 'Day 46-60', action: `Projected savings: $${(waste*12).toLocaleString()}/yr. Reinvest 50% into scaling winners. Bank the rest as margin.` });
+  document.getElementById('fixPlan').innerHTML = plan.map(p => `<div class="reco scale" style="margin-bottom:8px"><strong>${p.day}:</strong> ${p.action}</div>`).join('');
+}
+
+// ─── STEP 4: BENCHMARKS ───
+function renderBenchmarks() {
+  const r = ltvRatio();
+  const key = document.getElementById('industrySelect').value;
+  const b = BENCHMARKS[key];
+
+  let tierHtml = b.tiers.map((t, i) => {
+    const isYou = (i === 0 && r.ratio >= 5) || (i === 1 && r.ratio >= 3 && r.ratio < 5) || (i === 2 && r.ratio >= 1.5 && r.ratio < 3) || (i === 3 && r.ratio < 1.5);
+    return `<tr${isYou ? ' style="background:rgba(99,102,241,.1)"' : ''}><td${isYou ? ' class="bench-you"' : ''}>${t.label}${isYou ? ' ← YOU' : ''}</td><td>${t.cac}</td><td>${t.ratio}</td><td>${t.payback}</td><td>${t.ltv}</td><td>${t.grossMargin || '—'}</td><td>${t.netRetention || '—'}</td></tr>`;
+  }).join('');
+
+  let html = `
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="metric neutral"><div class="value">$${b.avgCAC[0]}-$${b.avgCAC[1]}</div><div class="label">Avg CAC (${b.name})</div></div>
+      <div class="metric neutral"><div class="value">$${b.avgLTV[0].toLocaleString()}-$${b.avgLTV[1].toLocaleString()}</div><div class="label">Avg LTV (${b.name})</div></div>
+      <div class="metric neutral"><div class="value">${b.avgRatio[0]}:${b.avgRatio[1]}</div><div class="label">Avg LTV:CAC (${b.name})</div></div>
+    </div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="metric neutral"><div class="value">${b.avgGrossMargin ? b.avgGrossMargin[0]+'-'+b.avgGrossMargin[1]+'%' : '—'}</div><div class="label">Avg Gross Margin</div></div>
+      <div class="metric neutral"><div class="value">${b.avgNetRetention ? b.avgNetRetention[0]+'-'+b.avgNetRetention[1]+'%' : '—'}</div><div class="label">Avg Net Retention</div></div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="bench-table">
+      <thead><tr><th>Tier</th><th>CAC Range</th><th>LTV:CAC</th><th>Payback</th><th>LTV</th><th>Gross Margin</th><th>Net Retention</th></tr></thead>
+      <tbody>${tierHtml}</tbody>
+    </table>
+    </div>
+  `;
+
+  if (b.cplRanges) {
+    html += `<h3 style="font-size:.95rem;margin-top:20px;margin-bottom:12px">Cost Per Lead Benchmarks</h3>
+    <div class="grid2" style="gap:12px;margin-bottom:16px">
+      ${Object.entries(b.cplRanges).map(([channel, range]) =>
+        `<div class="metric neutral"><div class="value">$${range[0]}-$${range[1]}</div><div class="label">${channel.charAt(0).toUpperCase() + channel.slice(1)} CPL</div></div>`
+      ).join('')}
+    </div>`;
+  }
+
+  if (b.conversionRates) {
+    html += `<h3 style="font-size:.95rem;margin-bottom:12px">Conversion Rate Benchmarks</h3>
+    <div class="grid2" style="gap:12px;margin-bottom:16px">
+      ${Object.entries(b.conversionRates).map(([stage, range]) =>
+        `<div class="metric neutral"><div class="value">${range[0]}-${range[1]}%</div><div class="label">${stage.charAt(0).toUpperCase() + stage.slice(1)} Rate</div></div>`
+      ).join('')}
+    </div>`;
+  }
+
+  document.getElementById('benchContent').innerHTML = html;
+
+  let vHtml = '';
+  if (r.ratio < 1.5) {
+    vHtml = `<div class="verdict bad">You're in the bottom tier for ${b.name}. Your LTV:CAC of ${r.ratio.toFixed(1)}:1 is below industry average. Immediate action required.</div>`;
+  } else if (r.ratio < 3) {
+    vHtml = `<div class="verdict warn">Below average for ${b.name}. Your LTV:CAC of ${r.ratio.toFixed(1)}:1 needs optimization to reach healthy ratios.</div>`;
+  } else if (r.ratio < 5) {
+    vHtml = `<div class="verdict good">Solid — you're in the good tier for ${b.name}. LTV:CAC of ${r.ratio.toFixed(1)}:1. Focus on scaling and testing new channels.</div>`;
+  } else {
+    vHtml = `<div class="verdict good">Top performer — your LTV:CAC of ${r.ratio.toFixed(1)}:1 puts you in the top 10% for ${b.name}. Scale aggressively.</div>`;
+  }
+  document.getElementById('benchVerdict').innerHTML = vHtml;
+}
+
+// ─── STEP 5: SCENARIOS ───
+function renderScenarios() {
+  const c = document.getElementById('scenarioRows');
+  c.innerHTML = scenarios.map((s, i) => `
+    <div class="scenario-row" style="gap:8px;margin-bottom:8px;align-items:end">
+      <div>
+        <label>Scenario Name</label>
+        <input type="text" value="${s.name}" onchange="scenarios[${i}].name=this.value;autoSave()" placeholder="e.g. Cut Google Ads 50%">
+      </div>
+      <div>
+        <label>Monthly Ad Spend ($)</label>
+        <input type="number" value="${s.spend||''}" onchange="scenarios[${i}].spend=parseFloat(this.value)||0;autoSave()" placeholder="${Math.round(ltvRatio().adSpend)}">
+      </div>
+      <div>
+        <label>Expected Customers</label>
+        <input type="number" value="${s.cust||''}" onchange="scenarios[${i}].cust=parseFloat(this.value)||0;autoSave()" placeholder="${ltvRatio().newCust}">
+      </div>
+      ${scenarios.length > 1 ? `<button onclick="scenarios.splice(${i},1);renderScenarios();autoSave()" class="del-btn" style="width:36px;height:36px;padding:0;background:var(--red);border-radius:8px;font-size:16px">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function addScenario() { scenarios.push({ name: '', spend: 0, cust: 0 }); renderScenarios(); autoSave(); }
+
+function syncScenariosFromDOM() {
+  const rows = document.querySelectorAll('#scenarioRows .scenario-row');
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs.length >= 3) {
+      scenarios[i] = { name: inputs[0].value, spend: parseFloat(inputs[1].value) || 0, cust: parseFloat(inputs[2].value) || 0 };
+    }
+  });
+}
+
+function calcScenarios() {
+  syncScenariosFromDOM();
+  const r = ltvRatio();
+
+  let rows = `
+    <div style="overflow-x:auto">
+    <table style="font-size:.85rem">
+      <thead><tr><th>Scenario</th><th>Spend</th><th>CAC</th><th>LTV:CAC</th><th>12mo Revenue</th><th>12mo Profit</th><th>vs Current</th></tr></thead>
+      <tbody>`;
+
+  const currentProfit = (r.ltv - r.cac) * r.newCust * 12;
+  rows += `<tr style="background:rgba(99,102,241,.08)"><td><strong>Current</strong></td><td>$${r.adSpend.toLocaleString()}/mo</td><td>$${r.cac.toFixed(0)}</td><td>${r.ratio.toFixed(1)}:1</td><td>$${(r.ltv * r.newCust * 12).toLocaleString()}</td><td>$${currentProfit.toLocaleString()}</td><td>—</td></tr>`;
+
+  scenarios.forEach(s => {
+    if (!s.name || !s.spend) return;
+    const sCac = s.spend / Math.max(s.cust, 0.001);
+    const sRatio = r.ltv / Math.max(sCac, 0.001);
+    const sProfit = (r.ltv - sCac) * s.cust * 12;
+    const diff = sProfit - currentProfit;
+    const diffStr = diff >= 0 ? `<span style="color:var(--green)">+$${diff.toLocaleString()}</span>` : `<span style="color:var(--red)">-$${Math.abs(diff).toLocaleString()}</span>`;
+    rows += `<tr><td>${s.name}</td><td>$${s.spend.toLocaleString()}/mo</td><td>$${sCac.toFixed(0)}</td><td>${sRatio.toFixed(1)}:1</td><td>$${(r.ltv * s.cust * 12).toLocaleString()}</td><td>$${sProfit.toLocaleString()}</td><td>${diffStr}</td></tr>`;
+  });
+
+  rows += '</tbody></table></div>';
+  document.getElementById('scenarioTable').innerHTML = rows;
+  document.getElementById('scenarioResults').style.display = 'block';
+}
+
+function calcROI() {
+  const waste = window._totalWaste || 0;
+  const savings = waste * 12;
+  const roiMultiple = savings > 0 ? (savings / 149).toFixed(0) : '0';
+  document.getElementById('roiSavings').textContent = '$' + savings.toLocaleString();
+  document.getElementById('roiMultiple').textContent = roiMultiple + 'x';
+
+  let bd = `<div class="reco"><strong>How we calculated this:</strong> Your total monthly waste is $${waste.toFixed(0)}. Over 12 months, that's $${savings.toLocaleString()} burned on unprofitable or under-optimized channels. If CAC Killer helps you reclaim even 50% of that waste, you save $${(savings * 0.5).toLocaleString()}/yr — a ${(savings * 0.5 / 149).toFixed(0)}x return on $149.</div>`;
+  bd += `<div class="reco" style="margin-top:8px"><strong>Conservative estimate:</strong> Even a 10% improvement in channel allocation = $${(savings * 0.1).toLocaleString()}/yr saved. That's a ${(savings * 0.1 / 149).toFixed(0)}x ROI.</div>`;
+  document.getElementById('roiBreakdown').innerHTML = bd;
+}
+
+// ─── STEP 6: LOADED CAC ───
+function prefillLoadedCAC() {
+  const r = ltvRatio();
+  const el = (id) => document.getElementById(id);
+  if (!el('lcAdSpend').value || el('lcAdSpend').value === '0') el('lcAdSpend').value = r.adSpend;
+  if (!el('lcNewCust').value || el('lcNewCust').value === '0') el('lcNewCust').value = r.newCust;
+}
+
+function calcLoadedCAC() {
+  prefillLoadedCAC();
+  const r = ltvRatio();
+  const v = (id) => parseFloat(document.getElementById(id).value) || 0;
+  const adSpend = v('lcAdSpend');
+  const newCust = Math.max(v('lcNewCust'), 1);
+  const salaries = v('lcSalaries');
+  const tools = v('lcTools');
+  const creative = v('lcCreative');
+  const agency = v('lcAgency');
+  const analytics = v('lcAnalytics');
+  const other = v('lcOther');
+
+  const blendedCAC = adSpend / newCust;
+  const totalLoaded = adSpend + salaries + tools + creative + agency + analytics + other;
+  const loadedCAC = totalLoaded / newCust;
+  const loadedRatio = r.ltv / Math.max(loadedCAC, 0.001);
+  const multiplier = loadedCAC / Math.max(blendedCAC, 0.001);
+  const unitProfit = (r.ltv / r.lifespan) * r.margin - (loadedCAC / 1);
+
+  document.getElementById('blendedCacVal').textContent = '$' + blendedCAC.toFixed(0);
+  document.getElementById('loadedCacVal').textContent = '$' + loadedCAC.toFixed(0);
+  document.getElementById('loadedLtvVal').textContent = loadedRatio.toFixed(1) + ':1';
+  document.getElementById('loadedMultiplierVal').textContent = multiplier.toFixed(1) + 'x';
+  document.getElementById('loadedProfitVal').textContent = (unitProfit >= 0 ? '+$' : '-$') + Math.abs(unitProfit).toFixed(0) + '/mo';
+
+  const bcm = document.getElementById('blendedCacMetric');
+  const lcm = document.getElementById('loadedCacMetric');
+  const ltm = document.getElementById('loadedLtvMetric');
+  const lpm = document.getElementById('loadedProfitMetric');
+
+  bcm.className = 'metric neutral';
+  if (loadedRatio < 1) {
+    lcm.className = 'metric bad'; ltm.className = 'metric bad'; lpm.className = 'metric bad';
+  } else if (loadedRatio < 3) {
+    lcm.className = 'metric warn'; ltm.className = 'metric warn'; lpm.className = 'metric warn';
+  } else {
+    lcm.className = 'metric good'; ltm.className = 'metric good'; lpm.className = 'metric good';
+  }
+
+  const vd = document.getElementById('loadedCacVerdict');
+  if (loadedRatio < 1) {
+    vd.className = 'verdict bad';
+    vd.textContent = 'CRITICAL — Your true acquisition cost ($' + loadedCAC.toFixed(0) + ') is ' + multiplier.toFixed(1) + 'x higher than blended. You lose money on every customer.';
+  } else if (loadedRatio < 3) {
+    vd.className = 'verdict warn';
+    vd.textContent = 'WARNING — Loaded LTV:CAC is ' + loadedRatio.toFixed(1) + ':1. Your real profitability is much thinner than it looks. ' + multiplier.toFixed(1) + 'x cost multiplier detected.';
+  } else {
+    vd.className = 'verdict good';
+    vd.textContent = 'HEALTHY — Even with loaded costs, your LTV:CAC is ' + loadedRatio.toFixed(1) + ':1. Solid unit economics.';
+  }
+
+  const costs = [
+    { label: 'Ad Spend', val: adSpend },
+    { label: 'Team Salaries', val: salaries },
+    { label: 'Tools & Software', val: tools },
+    { label: 'Creative / Content', val: creative },
+    { label: 'Agency / Freelance', val: agency },
+    { label: 'Analytics', val: analytics },
+    { label: 'Other Costs', val: other },
+  ].filter(c => c.val > 0);
+
+  let bdHtml = '<h3 style="font-size:.95rem;margin-bottom:12px">True Cost Breakdown</h3><div style="overflow-x:auto"><table class="bench-table"><thead><tr><th>Cost Category</th><th>Monthly $</th><th>% of Total</th><th>Per Customer</th></tr></thead><tbody>';
+  costs.forEach(c => {
+    const pct = (c.val / totalLoaded * 100).toFixed(1);
+    const perCust = (c.val / newCust).toFixed(0);
+    bdHtml += `<tr><td>${c.label}</td><td>$${c.val.toLocaleString()}</td><td>${pct}%</td><td>$${perCust}</td></tr>`;
+  });
+  bdHtml += `<tr style="font-weight:700"><td>Total Loaded Cost</td><td>$${totalLoaded.toLocaleString()}</td><td>100%</td><td>$${loadedCAC.toFixed(0)}</td></tr>`;
+  bdHtml += '</tbody></table></div>';
+  document.getElementById('loadedCacBreakdown').innerHTML = bdHtml;
+
+  let recoHtml = '';
+  if (multiplier > 2) {
+    recoHtml += `<div class="reco burn"><strong>${multiplier.toFixed(1)}x cost multiplier!</strong> Your true CAC is ${multiplier.toFixed(1)}x your blended CAC. The biggest hidden cost is likely salaries ($${salaries.toLocaleString()})/mo. Consider: (1) audit which marketing team activities directly drive acquisition, (2) cut or automate low-ROI activities, (3) shift budget toward channels with proven conversion.</div>`;
+  }
+  if (loadedRatio < 3) {
+    recoHtml += `<div class="reco"><strong>Reduce overhead per customer:</strong> You need $${(loadedCAC * 3).toFixed(0)} revenue per customer minimum to hit 3:1. Options: (1) increase volume to spread fixed costs, (2) negotiate tool discounts, (3) cut freelance/agency costs by 30-50%.</div>`;
+  }
+  if (salaries > adSpend) {
+    recoHtml += `<div class="reco"><strong>Team cost exceeds ad spend.</strong> Your marketing team costs $${salaries.toLocaleString()}/mo vs $${adSpend.toLocaleString()} in ads. Either your team is under-leveraged or your ad spend is too low. Rule of thumb: team cost should be 0.5-1x of ad spend.</div>`;
+  }
+  if (salaries === 0 && tools === 0 && creative === 0 && agency === 0) {
+    recoHtml += `<div class="reco"><strong>Missing overhead costs.</strong> You haven't entered any team, tool, or creative costs. Most companies have 1.5-3x their ad spend in hidden acquisition costs. Fill these in to see your true CAC.</div>`;
+  }
+  if (!recoHtml) {
+    recoHtml = `<div class="reco scale"><strong>Healthy loaded economics.</strong> Your true CAC of $${loadedCAC.toFixed(0)} with ${loadedRatio.toFixed(1)}:1 LTV:CAC means you can confidently scale.</div>`;
+  }
+  document.getElementById('loadedCacRecos').innerHTML = recoHtml;
+  document.getElementById('loadedCacResults').style.display = 'block';
+  window._loadedCAC = { blendedCAC, loadedCAC, loadedRatio, multiplier, totalLoaded, unitProfit };
+}
+
+// ─── STEP 7: CAC PLAYBOOK ───
+function buildPlaybook() {
+  const r = ltvRatio();
+  const waste = window._totalWaste || 0;
+  const loaded = window._loadedCAC || {};
+  const benchKey = document.getElementById('industrySelect').value;
+  const b = BENCHMARKS[benchKey];
+
+  const killCh = channels.filter(c => c.name && c.spend && (r.ltv / Math.max(c.spend / Math.max(c.cust, .001), .001)) < 1);
+  const scaleCh = channels.filter(c => c.name && c.spend && c.cust && (r.ltv / Math.max(c.spend / Math.max(c.cust, .001), .001)) >= 3);
+  const optimizeCh = channels.filter(c => {
+    if (!c.name || !c.spend) return false;
+    const ratio = r.ltv / Math.max(c.spend / Math.max(c.cust, .001), .001);
+    return ratio >= 1 && ratio < 3;
+  });
+
+  const weekPlan = [];
+  weekPlan.push({ week: 'Week 1-2', title: 'Stop the Bleeding', actions: [] });
+  if (killCh.length > 0) {
+    weekPlan[0].actions.push(`KILL ${killCh.map(c => c.name).join(', ')} — these channels have LTV:CAC < 1:1. You are literally losing money on every customer from them. Redirect $${killCh.reduce((s,c)=>s+c.spend,0).toLocaleString()}/mo immediately.`);
+  } else {
+    weekPlan[0].actions.push('All channels are at least 1:1 — good. But look for channels below 2:1 to optimize first.');
+  }
+  weekPlan[0].actions.push('Set up UTM tracking on EVERY link. No exceptions. You need to know exactly where every dollar goes.');
+  weekPlan[0].actions.push('Pause any campaign that has run > 14 days without a conversion. Cold traffic needs proof of concept fast.');
+
+  weekPlan.push({ week: 'Week 3-4', title: 'Optimize the Middle', actions: [] });
+  if (optimizeCh.length > 0) {
+    weekPlan[1].actions.push(`OPTIMIZE ${optimizeCh.map(c => c.name).join(', ')} — these are between 1:1 and 3:1. Test 3 new audience segments, 5 new ad creatives, and 2 new landing page variants for each.`);
+  } else {
+    weekPlan[1].actions.push('No channels in the 1:1-3:1 range. Great — means your channels are either clearly profitable or clearly unprofitable.');
+  }
+  weekPlan[1].actions.push(`Reduce CAC by 20% on each channel: (1) exclude non-converting audiences, (2) shift budget to top-performing ad sets, (3) A/B test landing pages.`);
+  weekPlan[1].actions.push(`Install cohort analysis. Track first-purchase vs 30-day vs 90-day retention to find which channels bring the best customers, not just the cheapest.`);
+
+  weekPlan.push({ week: 'Week 5-6', title: 'Scale the Winners', actions: [] });
+  if (scaleCh.length > 0) {
+    weekPlan[2].actions.push(`SCALE ${scaleCh.map(c => c.name).join(', ')} — increase budget by 50-100% on these ${scaleCh.length} channel${scaleCh.length>1?'s':''}. They are at 3:1+ LTV:CAC. Do not be afraid to spend when acquisition prints money.`);
+  } else {
+    weekPlan[2].actions.push('No channels at 3:1+ yet. This is expected in the first 30 days. Keep optimizing until at least one channel hits 3:1.');
+  }
+  weekPlan[2].actions.push(`Test 2-3 new channels with the $${killCh.reduce((s,c)=>s+c.spend,0).toLocaleString()}/mo recovered from killed channels. Budget $20-50/day per test. Kill anything below 2:1 in 7 days.`);
+  weekPlan[2].actions.push(`Launch a referral program: offer $${(r.ltv * 0.1).toFixed(0)} credit per referred customer. Referral CAC is typically 50-80% lower than paid.`);
+
+  weekPlan.push({ week: 'Week 7-8', title: 'Compound & Systematize', actions: [] });
+  weekPlan[2].actions.push(`Projected monthly savings: $${waste.toLocaleString()}. Annual: $${(waste * 12).toLocaleString()}. Reinvest 50% into tested channels, bank the rest.`);
+  weekPlan[3].actions.push('Build a weekly CAC review dashboard. Check LTV:CAC by channel every Monday. Kill anything that degrades for 2 consecutive weeks.');
+  weekPlan[3].actions.push(`Set up automated email sequences to increase LTV. A 10% increase in retention = $${(r.ltv * 0.1).toFixed(0)} more per customer. That's $${(r.ltv * 0.1 * r.newCust).toLocaleString()}/mo in revenue.`);
+  weekPlan[3].actions.push('Document your channel playbook. What works, what doesn\'t, bid strategies, audience insights. This becomes your competitive moat.');
+
+  let playbookHtml = weekPlan.map(wp => `
+    <div class="card">
+      <h2 style="margin-bottom:4px">${wp.week}: ${wp.title}</h2>
+      ${wp.actions.map((a, i) => `<div class="reco ${i === 0 ? (wp.week === 'Week 1-2' ? 'burn' : 'scale') : ''}" style="margin-bottom:8px"><strong>${i + 1}.</strong> ${a}</div>`).join('')}
+    </div>
+  `).join('');
+
+  if (loaded.multiplier && loaded.multiplier > 1.5) {
+    playbookHtml += `<div class="card"><h2><span class="icon">&#9888;</span> Loaded CAC Warning</h2><p style="color:var(--red);font-size:.9rem;line-height:1.6">Your true CAC is <strong>${loaded.multiplier.toFixed(1)}x higher</strong> than your blended CAC ($${loaded.loadedCAC?.toFixed(0)} vs $${loaded.blendedCAC?.toFixed(0)}). Before scaling any channel, ensure your loaded acquisition costs are accounted for. Add 50-100% to your CAC estimates when planning budgets.</p></div>`;
+  }
+
+  document.getElementById('playbookContent').innerHTML = playbookHtml;
+
+  const checks = [
+    { label: 'Install UTM tracking on all links', priority: 'HIGH' },
+    { label: 'Pause any ad campaign running >14 days without conversion', priority: 'HIGH' },
+    { label: 'Set up conversion tracking in every ad platform', priority: 'HIGH' },
+    { label: 'Review and cancel underused marketing tools', priority: 'MED' },
+  ];
+  if (killCh.length > 0) checks.push({ label: `Kill ${killCh.map(c=>c.name).join(', ')} — LTV:CAC below 1:1`, priority: 'HIGH' });
+  if (scaleCh.length > 0) checks.push({ label: `Increase budget on ${scaleCh.map(c=>c.name).join(', ')} by 50%`, priority: 'HIGH' });
+  if (r.ratio < 3) {
+    checks.push({ label: 'A/B test your landing pages (3 variants minimum)', priority: 'HIGH' });
+    checks.push({ label: 'Review ad creative — try 5 completely new angles', priority: 'MED' });
+  }
+  checks.push({ label: 'Set up a weekly CAC review (every Monday)', priority: 'MED' });
+  checks.push({ label: 'Build a referral program (cheapest CAC channel)', priority: 'MED' });
+  checks.push({ label: 'Create a cohort analysis for top 3 channels', priority: 'MED' });
+  if (loaded.multiplier && loaded.multiplier > 1.5) checks.push({ label: 'Audit marketing team time allocation vs output', priority: 'HIGH' });
+  checks.push({ label: 'Negotiate annual contracts on marketing tools (save 15-25%)', priority: 'LOW' });
+  checks.push({ label: 'Set up retargeting for abandoned carts/leads', priority: 'LOW' });
+
+  const priorityColors = { HIGH: 'var(--red)', MED: 'var(--orange)', LOW: 'var(--green)' };
+  const checklistHtml = checks.map(c => `
+    <div class="checklist-item">
+      <input type="checkbox">
+      <span class="label">${c.label}</span>
+      <span class="priority" style="color:${priorityColors[c.priority]}">${c.priority}</span>
+    </div>
+  `).join('');
+  document.getElementById('quickWinChecklist').innerHTML = checklistHtml;
+
+  const summaryHtml = `
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="metric ${r.ratio<1.5?'bad':r.ratio<3?'warn':'good'}">
+        <div class="value">${r.ratio.toFixed(1)}:1</div>
+        <div class="label">LTV:CAC (Blended)</div>
+      </div>
+      ${loaded.loadedRatio ? `<div class="metric ${loaded.loadedRatio<1.5?'bad':loaded.loadedRatio<3?'warn':'good'}">
+        <div class="value">${loaded.loadedRatio.toFixed(1)}:1</div>
+        <div class="label">LTV:CAC (Loaded)</div>
+      </div>` : '<div class="metric neutral"><div class="value">—</div><div class="label">LTV:CAC (Loaded)</div></div>'}
+      <div class="metric ${waste>0?'bad':'good'}">
+        <div class="value">$${waste.toLocaleString()}</div>
+        <div class="label">Monthly Waste</div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="metric neutral">
+        <div class="value">$${r.cac.toFixed(0)}</div>
+        <div class="label">Blended CAC</div>
+      </div>
+      ${loaded.loadedCAC ? `<div class="metric neutral">
+        <div class="value">$${loaded.loadedCAC.toFixed(0)}</div>
+        <div class="label">Loaded CAC</div>
+      </div>` : '<div class="metric neutral"><div class="value">—</div><div class="label">Loaded CAC</div></div>'}
+    </div>
+    <div style="overflow-x:auto">
+    <table style="font-size:.85rem;margin-top:16px">
+      <thead><tr><th>Channel</th><th>Spend</th><th>CAC</th><th>LTV:CAC</th><th>Verdict</th></tr></thead>
+      <tbody>
+        ${channels.filter(c=>c.name&&c.spend).map(c => {
+          const chCac = c.spend / Math.max(c.cust, 0.001);
+          const chRatio = r.ltv / Math.max(chCac, 0.001);
+          const tag = chRatio < 1 ? 'kill' : chRatio < 3 ? 'test' : 'keep';
+          const verdict = chRatio < 1 ? 'KILL' : chRatio < 3 ? 'OPTIMIZE' : 'SCALE';
+          return `<tr><td>${c.name}</td><td>$${c.spend.toLocaleString()}</td><td>$${chCac.toFixed(0)}</td><td>${chRatio.toFixed(1)}:1</td><td><span class="tag ${tag}">${verdict}</span></td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div style="margin-top:16px;padding:16px;background:var(--surface);border-radius:10px;text-align:center;font-size:.9rem;color:var(--dim)">
+      Industry: ${b.name} | Your Rank: ${r.ratio<1.5?'Poor':r.ratio<3?'Average':r.ratio<5?'Good':'Top 10%'} | Annual Waste: $${(waste*12).toLocaleString()} | ${loaded.multiplier ? 'True cost multiplier: '+loaded.multiplier.toFixed(1)+'x' : 'Run Loaded CAC calculator for true costs'}
+    </div>
+  `;
+  document.getElementById('fullSummary').innerHTML = summaryHtml;
+}
+
+// ─── NAVIGATION ───
+function updateSteps(step) {
+  currentStep = step;
+  for (let i = 1; i <= 7; i++) {
+    const s = document.getElementById('s' + i);
+    const b = document.getElementById('b' + i);
+    s.className = 'step';
+    b.className = 'bar';
+    if (i < step) { s.className = 'step done'; b.className = 'bar done'; }
+    else if (i === step) { s.className = 'step active'; b.className = 'bar active'; }
+  }
+}
+
+function goToStep(step) {
+  const targets = ['calcSection','channelSection','wasteSection','benchSection','scenarioSection','loadedCacSection','playbookSection'];
+  if (step < 1 || step > 7) return;
+  // Calculate data for steps we're jumping to or past
+  if (step >= 1) calcHealth();
+  if (step >= 2) { syncChannelsFromDOM(); calcChannels(); }
+  if (step >= 3) buildWasteStep();
+  if (step >= 4) renderBenchmarks();
+  if (step >= 5) {
+    const r = ltvRatio();
+    if (!scenarios[0].spend) scenarios[0] = { name: 'Current Plan', spend: r.adSpend, cust: r.newCust };
+    renderScenarios(); calcScenarios(); calcROI();
+  }
+  if (step >= 6) { prefillLoadedCAC(); calcLoadedCAC(); }
+  if (step >= 7) buildPlaybook();
+
+  targets.forEach((id, i) => {
+    document.getElementById(id).classList.toggle('hidden', i !== step - 1);
+  });
+  updateSteps(step);
+  window.scrollTo(0, 0);
+}
+
+function goStep2() { goToStep(2); }
+function backToStep1() { goToStep(1); }
+function goStep3() { goToStep(3); }
+function backToStep2() { goToStep(2); }
+function goStep4() { goToStep(4); }
+function backToStep3() { goToStep(3); }
+function goStep5() { goToStep(5); }
+function backToStep4() { goToStep(4); }
+function goStep6() { goToStep(6); }
+function backToStep5() { goToStep(5); }
+function goStep7() { goToStep(7); }
+function backToStep6() { goToStep(6); }
+
+// ─── EXPORT ───
+function exportReport() { exportFullReport(); }
+
+function exportFullReport() {
+  const r = ltvRatio();
+  const waste = window._totalWaste || 0;
+  const loaded = window._loadedCAC || {};
+  const benchKey = document.getElementById('industrySelect').value;
+  const b = BENCHMARKS[benchKey];
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>CAC Killer Full Audit Report</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#1a1a1a;line-height:1.6}
+h1{font-size:1.8rem;border-bottom:3px solid #6366f1;padding-bottom:8px}
+h2{font-size:1.2rem;margin-top:24px;color:#6366f1}
+.metric{display:inline-block;background:#f5f5f5;border-radius:8px;padding:12px 20px;margin:4px;text-align:center}
+.metric .val{font-size:1.4rem;font-weight:800}
+.metric .lbl{font-size:.7rem;text-transform:uppercase;color:#666}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th{background:#f5f5f5;text-align:left;padding:8px 12px;font-size:.75rem;text-transform:uppercase}
+td{padding:8px 12px;border-bottom:1px solid #eee}
+.kill{color:#ef4444;font-weight:700}
+.optimize{color:#f59e0b;font-weight:700}
+.scale{color:#10b981;font-weight:700}
+.warn-box{background:#fffbeb;border:1px solid #f59e0b;padding:12px;border-radius:8px;margin:12px 0}
+.bad-box{background:#fef2f2;border:1px solid #ef4444;padding:12px;border-radius:8px;margin:12px 0}
+.good-box{background:#ecfdf5;border:1px solid #10b981;padding:12px;border-radius:8px;margin:12px 0}
+.footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:.8rem;color:#999;text-align:center}
+@media print{body{margin:20px}h1{font-size:1.5rem}}
+</style></head><body>
+<h1>CAC Killer Full Audit Report</h1>
+<p style="color:#666">Generated ${new Date().toLocaleDateString()} | Industry: ${b.name}</p>
+
+<h2>1. Unit Economics (Blended)</h2>
+<div style="margin:12px 0">
+  <div class="metric"><div class="val">$${r.cac.toFixed(0)}</div><div class="lbl">BLENDED CAC</div></div>
+  <div class="metric"><div class="val">$${r.ltv.toFixed(0)}</div><div class="lbl">LTV</div></div>
+  <div class="metric"><div class="val">${r.ratio.toFixed(1)}:1</div><div class="lbl">LTV:CAC</div></div>
+  <div class="metric"><div class="val">${(r.cac/(r.ltv/r.lifespan)).toFixed(1)} mo</div><div class="lbl">PAYBACK</div></div>
+</div>
+
+${loaded.loadedCAC ? `<h2>2. Loaded CAC Analysis</h2>
+<div style="margin:12px 0">
+  <div class="metric"><div class="val">$${loaded.blendedCAC?.toFixed(0)}</div><div class="lbl">BLENDED CAC</div></div>
+  <div class="metric"><div class="val">$${loaded.loadedCAC?.toFixed(0)}</div><div class="lbl">LOADED CAC</div></div>
+  <div class="metric"><div class="val">${loaded.multiplier?.toFixed(1)}x</div><div class="lbl">TRUE COST MULTIPLIER</div></div>
+  <div class="metric"><div class="val">${loaded.loadedRatio?.toFixed(1)}:1</div><div class="lbl">LOADED LTV:CAC</div></div>
+</div>
+<div class="${loaded.loadedRatio < 1 ? 'bad-box' : loaded.loadedRatio < 3 ? 'warn-box' : 'good-box'}">
+  ${loaded.loadedRatio < 1 ? 'CRITICAL: True CAC is ' + loaded.multiplier?.toFixed(1) + 'x blended. You lose money on every customer.' : loaded.loadedRatio < 3 ? 'WARNING: Loaded LTV:CAC is ' + loaded.loadedRatio?.toFixed(1) + ':1. Profitability is much thinner than blended numbers suggest.' : 'HEALTHY: Even with loaded costs, LTV:CAC is ' + loaded.loadedRatio?.toFixed(1) + ':1.'}
+</div>` : ''}
+
+<h2>${loaded.loadedCAC ? '3' : '2'}. Channel Breakdown</h2>
+<table>
+  <thead><tr><th>Channel</th><th>Monthly Spend</th><th>Customers</th><th>CAC</th><th>LTV:CAC</th><th>Verdict</th></tr></thead>
+  <tbody>`);
+  channels.forEach(ch => {
+    if (!ch.name || !ch.spend) return;
+    const chCac = ch.spend / Math.max(ch.cust, 0.001);
+    const chRatio = r.ltv / Math.max(chCac, 0.001);
+    let cls = chRatio < 1 ? 'kill' : chRatio < 3 ? 'optimize' : 'scale';
+    let tag = chRatio < 1 ? 'KILL' : chRatio < 3 ? 'OPTIMIZE' : 'SCALE';
+    win.document.write(`<tr><td>${ch.name}</td><td>$${ch.spend.toLocaleString()}</td><td>${ch.cust}</td><td>$${chCac.toFixed(0)}</td><td>${chRatio.toFixed(1)}:1</td><td class="${cls}">${tag}</td></tr>`);
+  });
+
+  const unattr = (window._totalSpend || 0) - channels.reduce((s,c) => s+c.spend, 0);
+  if (unattr > 0) win.document.write(`<tr><td>Unattributed</td><td>$${unattr.toLocaleString()}</td><td>?</td><td>?</td><td>?</td><td class="optimize">TRACK</td></tr>`);
+
+  win.document.write(`</tbody></table>
+
+<h2>${loaded.loadedCAC ? '4' : '3'}. Waste Analysis</h2>
+<p><strong>Monthly waste:</strong> $${waste.toLocaleString()} | <strong>Annual waste:</strong> $${(waste*12).toLocaleString()}</p>
+
+<h2>${loaded.loadedCAC ? '5' : '4'}. Industry Benchmarks (${b.name})</h2>
+<table>
+  <thead><tr><th>Tier</th><th>CAC Range</th><th>LTV:CAC</th><th>Payback</th><th>LTV</th><th>Gross Margin</th><th>Net Retention</th></tr></thead>
+  <tbody>`);
+
+  b.tiers.forEach(t => win.document.write(`<tr><td>${t.label}</td><td>${t.cac}</td><td>${t.ratio}</td><td>${t.payback}</td><td>${t.ltv}</td><td>${t.grossMargin || '—'}</td><td>${t.netRetention || '—'}</td></tr>`));
+
+  win.document.write(`</tbody></table>
+<p>Your LTV:CAC of ${r.ratio.toFixed(1)}:1 places you in the ${r.ratio<1.5?'Poor':r.ratio<3?'Average':r.ratio<5?'Good':'Top 10%'} tier for ${b.name}.</p>
+
+<div class="footer">Generated by CAC Killer — cac-killer.com</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function exportReportText() {
+  const r = ltvRatio();
+  const waste = window._totalWaste || 0;
+  const loaded = window._loadedCAC || {};
+  const benchKey = document.getElementById('industrySelect').value;
+  const b = BENCHMARKS[benchKey];
+
+  let txt = `CAC KILLER FULL AUDIT REPORT\nGenerated: ${new Date().toLocaleDateString()}\nIndustry: ${b.name}\n${'='.repeat(60)}\n\n`;
+
+  txt += `UNIT ECONOMICS (BLENDED)\n${'-'.repeat(60)}\n`;
+  txt += `  CAC: $${r.cac.toFixed(0)}\n  LTV: $${r.ltv.toFixed(0)}\n  LTV:CAC: ${r.ratio.toFixed(1)}:1\n  Payback: ${(r.cac / (r.ltv / r.lifespan)).toFixed(1)} months\n  Monthly Unit Profit: $${((r.ltv / r.lifespan) - r.cac).toFixed(0)}/mo\n\n`;
+
+  if (loaded.loadedCAC) {
+    txt += `LOADED CAC ANALYSIS\n${'-'.repeat(60)}\n`;
+    txt += `  Blended CAC: $${loaded.blendedCAC?.toFixed(0)}\n  Loaded CAC: $${loaded.loadedCAC?.toFixed(0)}\n  True Cost Multiplier: ${loaded.multiplier?.toFixed(1)}x\n  Loaded LTV:CAC: ${loaded.loadedRatio?.toFixed(1)}:1\n\n`;
+  }
+
+  txt += `CHANNEL BREAKDOWN\n${'-'.repeat(60)}\n`;
+  channels.forEach(ch => {
+    if (!ch.name || !ch.spend) return;
+    const chCac = ch.spend / Math.max(ch.cust, 0.001);
+    const chRatio = r.ltv / Math.max(chCac, 0.001);
+    const tag = chRatio < 1 ? 'KILL' : chRatio < 3 ? 'OPTIMIZE' : 'SCALE';
+    txt += `  ${ch.name}: $${ch.spend.toLocaleString()}/mo | ${ch.cust} cust | CAC $${chCac.toFixed(0)} | LTV:CAC ${chRatio.toFixed(1)}:1 | ${tag}\n`;
+  });
+  const unattr = (window._totalSpend || 0) - channels.reduce((s,c)=>s+c.spend,0);
+  if (unattr > 0) txt += `  Unattributed: $${unattr.toLocaleString()}/mo | TRACK\n`;
+
+  txt += `\nWASTE ANALYSIS\n${'-'.repeat(60)}\n`;
+  txt += `  Monthly waste: $${waste.toFixed(0)}\n  Annual waste: $${(waste*12).toLocaleString()}\n\n`;
+
+  txt += `INDUSTRY BENCHMARKS: ${b.name}\n${'-'.repeat(60)}\n`;
+  b.tiers.forEach(t => txt += `  ${t.label}: CAC ${t.cac} | LTV:CAC ${t.ratio} | Payback ${t.payback} | LTV ${t.ltv}\n`);
+  txt += `\nYou: LTV:CAC ${r.ratio.toFixed(1)}:1 -> ${r.ratio<1.5?'Poor':r.ratio<3?'Average':r.ratio<5?'Good':'Top 10%'} tier\n`;
+
+  const blob = new Blob([txt], {type: 'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'cac-killer-audit-report.txt'; a.click();
+}
+
+// ─── INIT ───
+loadSaved();
+renderChannels();
+renderScenarios();
+
+// Load from URL hash if present
+try {
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const decoded = decodeURIComponent(escape(atob(hash)));
+    const params = new URLSearchParams(decoded);
+    if (params.get('ad')) {
+      document.getElementById('adSpend').value = params.get('ad');
+      document.getElementById('newCust').value = params.get('nc');
+      document.getElementById('revPerCust').value = params.get('rev');
+      document.getElementById('lifespan').value = params.get('ls');
+      document.getElementById('grossMargin').value = params.get('gm');
+      if (params.get('ind')) document.getElementById('industrySelect').value = params.get('ind');
+      if (params.get('ch')) {
+        channels = params.get('ch').split(',').map(c => {
+          const parts = c.split(':');
+          return { name: parts[0], spend: parseFloat(parts[1]) || 0, cust: parseFloat(parts[2]) || 0 };
+        });
+        renderChannels();
+      }
+    }
+  }
+} catch(e) {}
+</script>
+</body>
+</html>

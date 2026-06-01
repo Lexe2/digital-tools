@@ -9,164 +9,124 @@
 
 ### Affiliate Autopilot AI — Jun 10, 2026
 - Platform: JVZoo
-- Categories: Affiliate Marketing, AI, Automation, Pinterest Traffic
-- Assess: INTERESTING. Multi-traffic-source automation. Same launch day as Audio Dollars.
+- Details pending — just appeared on MunchEye RSS
+- Assess: Watch. AI affiliate tools are hot but crowded. Need to vet vendor.
 
-### Ecommerce Data Kit — Jun 10, 2026
-- Platform: WarriorPlus
-- 70,000+ US Ecommerce Stores dataset
-- Assess: Niche product. High value for lead-gen agencies. WarriorPlus = lower quality signals.
-
-### AI Profit Booster — May 23, 2026 (TODAY)
-- Platform: WarriorPlus
-- Categories: Affiliate marketing, make money online
-- Assess: Generic name, WarriorPlus platform, "make money online" category = red flags. Skip.
-
-### Communi Ai — Jun 6, 2026
-- Platform: JVZoo | Affiliate Network
-- Categories: Premium
-- Assess: Premium tagged. Same launch day as AmpCast AI. Watch for conflict.
-
-### (PLR) AI Hack Defense Series — Jun 8, 2026
-- Platform: WarriorPlus
-- AI security PLR content. Niche but timely.
-
-## PREVIOUSLY IDENTIFIED (Confirmed in RSS)
-
-- AmpCast AI (Chris Munch) — Jun 6 — JVZoo — CONFIRMED
-- Audio Dollars (Soren Jordansen/IM Wealth Builders) — Jun 10 — JVZoo — CONFIRMED
-- AuthorityAI (Neil Napier) — Jun 15 — Awaiting RSS confirmation
-- AI Income Engine (Sean Donahoe) — Jun 22 — Awaiting RSS confirmation
-- AI Copy Formula Mastery — May 25 (TOMORROW) — WarriorPlus
-
-## IMMEDIATE ACTION ITEMS
-
-1. LeadhunterX AI (Jun 3) — research vendor, find affiliate page
-2. Affiliate Autopilot AI (Jun 10) — monitor for commission structure
-3. AI Copy Formula Mastery (May 25) — launches TOMORROW, quick review if possible
-4. Communi Ai (Jun 6) — check if premium pricing means higher commissions
-
----
-
-Last scan: 2026-05-24 09:53 ET
-Next scan: 2026-05-25 07:00 ET (cron job)
-
----
-
-# Launch Alerts — May 25, 2026
-
-## Newly Listed on MunchEye (13 unread articles scanned)
-
-### May 24 - Funnel of 8 eBooks
+### The AI Emailer — Jun 12, 2026
 - Platform: JVZoo
-- Categories: JVZoo
-- URL: https://muncheye.com/funnel-of-8-ebooks
-- Assess: PLR ebook funnel. Low-effort product. JVZoo platform = potential but the category and name suggest a rehash bundle. Worth a quick look if the commission's decent, otherwise skip.
+- Details pending
+- Assess: Email marketing tools on JVZoo usually have solid front-end + OTO structure. Worth a look.
 
-### May 24 - (Lead Magnets) Houdini Timeless/Classic
+### VidFusion AI — Jun 12, 2026
+- Platform: JVZoo
+- Details pending
+- Assess: AI video is saturated. Skip unless vendor has proven track record.
+
+### AI Profit Siphon — Jun 17, 2026
+- Platform: JVZoo
+- Details pending
+- Assess: Aggressive naming convention. Typically signals hype-heavy launch. Be skeptical.
+
+### AgencyFlow AI — Jun 19, 2026
 - Platform: WarriorPlus
-- Categories: PLR, WarriorPlus
-- URL: https://muncheye.com/lead-magnets-houdini-timless-classic
-- Assess: PLR lead magnet pack. Another rebranded PLR product. Skip unless you need lead magnets for your own funnel.
-
-### May 25 - Joan Altres – AI SEO PLR Bundle
-- Platform: WarriorPlus
-- Categories: PLR, WarriorPlus, AI PLR, chatgpt plr
-- URL: https://muncheye.com/joan-altres-ai-seo-plr-bundle
-- Assess: AI + SEO PLR. Hot niche combo but WarriorPlus PLR is usually low quality. Joan Altres is a known PLR vendor — content tends to be usable but unremarkable.
-
-### May 25 - AI Underdog
-- Platform: WarriorPlus
-- Categories: General, Software, WarriorPlus
-- URL: https://muncheye.com/ai-underdog
-- Assess: AI software tool. Vague listing — no details on what it actually does. WarriorPlus AI tools are hit or miss. Monitor for more info before committing.
-
-### May 26 - AI Underdog (launches tomorrow)
-- Quick note: launches May 26. If this is an AI tool with decent demo, it could convert. But WarriorPlus + generic name = caution.
-
-### May 28 - Affiliate Platform Mastery
-- Platform: WarriorPlus
-- Categories: Affiliate Marketing, Affiliate Network, Bizopp, eCommerce
-- URL: https://muncheye.com/affiliate-platform-mastery
-- Assess: Affiliate marketing training. Crowded niche. Name sounds like yet another "how to make money" course. Likely low conversion unless the vendor has strong credentials.
-
-### Jun 1 - Vendor Verdict
-- Platform: WarriorPlus
-- Categories: Affiliate Marketing, Clickbank, Software, WarriorPlus
-- URL: https://muncheye.com/vendor-verdict
-- Assess: Software tool for affiliate marketing + ClickBank. Cross-platform targeting is interesting. Name suggests it helps evaluate vendors/products. Could be useful for affiliates. Worth investigating.
-
-### Jun 3 - Jason Oickle – The 100-Visitor Affiliate Jumpstart – PLR Lead Magnet Package
-- Platform: WarriorPlus
-- Categories: Affiliate Marketing, List Building, PLR, WarriorPlus
-- URL: https://muncheye.com/jason-oickle-the-100-visitor-affiliate-jumpstart-plr-lead-magnet-package
-- Assess: Jason Oickle is a known name in affiliate marketing. PLR lead magnet package tied to a traffic method. If the lead magnets are good, this could convert for the list-building crowd.
-
-### Jun 8 - KidsVerse
-- Platform: Launchpad
-- Categories: Launchpad
-- URL: https://muncheye.com/kidsverse
-- Assess: Kids content platform. Unusual niche for the usual MunchEye crowd. Could stand out from the sea of AI/make-money products. Need more details.
-
-### Jun 10 - New Launch (untitled)
-- Platform: WarriorPlus
-- URL: https://muncheye.com/new-launch-3
-- Assess: Unnamed launch, placeholder listing. No usable info. Check back later.
-
-### Jun 12 - Laxman Singh – DR.Builder
-- Platform: Affiliate Network
-- Categories: Affiliate Network, Cryptocurrency, Launchpad, Niche, Software
-- URL: https://muncheye.com/laxman-singh-dr-builder
-- Assess: Crypto + software tool. Laxman Singh has done crypto products before. Niche audience but high-ticket potential. Worth watching if you have a crypto list.
-
-### Jun 19 - New Launch 2 (untitled)
-- Platform: WarriorPlus
-- URL: https://muncheye.com/new-launch-2-2
-- Assess: Another placeholder. Skip until details appear.
-
-### Jun 30 - EOL-Warmup Buddy
-- Platform: Launchpad
-- Categories: Launchpad
-- URL: https://muncheye.com/eol-warmup-buddy
-- Assess: Email warmup tool by the name. If it's a deliverability tool, that's a perennial pain point — could sell well. Monitor for pricing and commission.
-
-### Jul 13 - SocialShorts
-- Platform: Launchpad
-- Categories: Launchpad, Uncategorized
-- URL: https://muncheye.com/socialshorts
-- Assess: Social media short-form video tool, judging by the name. Hot niche (TikTok/Reels/Shorts). If it's AI-powered video creation, could be strong. Launchpad platform = unknown quality signals.
+- Details pending
+- Assess: Agency tools do well on W+. Wait for JV page before committing.
 
 ---
 
-## Quick Takes: What's Worth Watching
+# JVZoo Launch Alerts — May 27, 2026
 
-**Worth a closer look:**
-- **Vendor Verdict** (Jun 1) — cross-platform affiliate tool, unusual angle
-- **Jason Oickle PLR Package** (Jun 3) — known vendor, list-building niche
-- **KidsVerse** (Jun 8) — unique niche, less competition
-- **Laxman Singh DR.Builder** (Jun 12) — crypto niche, high-ticket potential
-- **EOL-Warmup Buddy** (Jun 30) — email deliverability tool, evergreen pain point
-- **SocialShorts** (Jul 13) — short-form video tool, hot market
+## SCAN STATUS
+- MunchEye: ✅ 13 new articles
+- JVZoo Blog: ❌ 301 redirect (feed moved)
+- WarriorPlus Blog: ❌ No feed configured
+- ClickBank Blog: ❌ 403 Forbidden
 
-**Skip:**
-- PLR bundles (Houdini, AI SEO PLR) — oversaturated, low commissions
-- Untitled "New Launch" placeholders — no info to evaluate
-- Affiliate Platform Mastery — dime-a-dozen MMO training
+## NEW LAUNCHES
+
+### HuntingAlice – AI Lead Hunter — May 31, 2026 (4 days)
+- **Platform:** JVZoo
+- **Vendor:** Unknown (new name, no track record on MunchEye)
+- **Category:** AI lead generation, B2B prospecting
+- **Assess:** Short runway, solo JVZoo launch. AI lead gen is a strong niche right now — businesses are desperate for qualified leads. But a 4-day notice with an unknown vendor is a red flag. If there's no JV page with real demo footage, skip it. If they show working software, could be a sleeper.
+
+### Arifianto Rahardi – New Launch — Jun 13, 2026 (17 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Arifianto Rahardi
+- **Category:** List building, PLR, social media, video
+- **Assess:** Multi-category bundle. "New Launch" as the title means no product name yet — early teaser phase. Arifianto is a known W+ vendor, typically mid-tier PLR and list-building stuff. Decent for building a buyer list, but commissions are usually low on PLR bundles. Wait for the actual product name and price.
+
+### Larry Kearney – (PLR) AI Romance Book Creator Master Prompt — Jun 17, 2026 (21 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Larry Kearney
+- **Category:** PLR, AI prompts, KDP/Amazon book publishing
+- **Assess:** Larry Kearney is a PLR factory — high volume, low originality. The KDP romance angle is smart (romance is the #1 KDP category), but this is just a prompt pack. PLR prompt packs are a dime a dozen. Only worth promoting if you have a KDP-focused audience that actually buys this stuff. Low ticket, low commission.
+
+### Dawn Vu – Local Template Store Fortune — Jun 2, 2026 (6 days)
+- **Platform:** WarriorPlus (with Affiliate Network, JVZoo crossover possible)
+- **Vendor:** Dawn Vu
+- **Category:** Local marketing, eCommerce, done-for-you stores/websites, WordPress
+- **Assess:** Dawn Vu is a known vendor in the local marketing space. DFY website stores for local niches. These tend to have solid front-end pricing ($17-27) with OTO upsells ($67-197). Local marketing affiliates do well with this because the buyer is a small business owner who will buy the upsells. 6 days out — check if there's a JV page with commission breakdown. Worth considering if the funnel is right.
+
+### Jamie Lewis launches SNAPBUILDS — Jul 2, 2026 (36 days)
+- **Platform:** JVZoo
+- **Vendor:** Jamie Lewis
+- **Category:** Not specified
+- **Assess:** Jamie Lewis is a top-tier JVZoo vendor. Consistently delivers high-converting funnels with strong affiliate support. Anything he launches gets attention. SNAPBUILDS sounds like a site builder or funnel builder — if it's anything like his past tools, expect $37-47 front end with aggressive OTO stack. Long runway (5 weeks) means plenty of time to prepare. Top pick from this batch.
+
+### Jamie Lewis launches Arsenal Stack — Jul 13, 2026 (47 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Jamie Lewis
+- **Category:** Not specified
+- **Assess:** Second Jamie Lewis launch spotted — this one on WarriorPlus, 11 days after SNAPBUILDS. "Arsenal Stack" sounds like a bundle/stack product — could be a collection of his existing tools repackaged. Cross-platform launches (JVZoo then W+) are common for top vendors. Worth tracking both, but SNAPBUILDS on JVZoo is likely the bigger play.
+
+### (PLR + AI) The GPT Cashflow Kit – Powered by Prompt PsyOps — Jun 5, 2026 (9 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Unknown
+- **Category:** Affiliate marketing, list building, PLR
+- **Assess:** "Prompt PsyOps" is a weird branding choice. PLR + AI combo targeting affiliate marketers. These "cashflow kit" products are usually low-ticket ($9-17) PLR with some AI prompts thrown in. Skip unless you have a buyer list that eats PLR content up. 9 days out with no vendor name is suspicious.
+
+### Million-Dollar Marketers' Playbook — Jun 29, 2026 (33 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Unknown
+- **Category:** PLR, video, beginner ebook, internet marketing, sales funnels
+- **Assess:** Generic IM playbook. The "million-dollar" naming is classic W+ hype — almost never correlates with quality. Beginner-targeted PLR. Low commission, high refund rate potential. Pass.
+
+### Forex Profit Machine: Beginners Guide (PLR) — May 28, 2026 (TOMORROW)
+- **Platform:** WarriorPlus
+- **Vendor:** Unknown
+- **Category:** PLR, Forex
+- **Assess:** Launching tomorrow. Forex PLR is a narrow niche — if you have a forex/ trading audience, maybe. But it's PLR (low ticket, low commission) and the vendor is unlisted. Probably not worth the email blast.
+
+### Coloring Book Game Prompts Generator — May 28, 2026 (TOMORROW)
+- **Platform:** WarriorPlus
+- **Vendor:** Unknown
+- **Category:** Software, coloring book game prompts/software
+- **Assess:** Also launching tomorrow. Coloring book tools are a weirdly persistent niche on W+ — low-content publishing crowd buys these. If it generates actual printable coloring pages with AI, there's a market. But unknown vendor + no lead time = skip.
+
+### Jason Oickle – The AI Video Revolution – PLR Lead Magnet Package — Jun 7, 2026 (11 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Jason Oickle
+- **Category:** List building, PLR, video, DFY lead magnet
+- **Assess:** Jason Oickle is a known PLR vendor on W+. DFY lead magnet packages are his thing. AI video angle is current. Good for list builders who need lead magnets. Mid-tier — won't make you rich but reliable for small commissions if you have a list-building audience.
+
+### Larry Kearney – (PLR) 600 Viral Traffic Prompts For Unlimited Free Traffic — May 30, 2026 (3 days)
+- **Platform:** WarriorPlus
+- **Vendor:** Larry Kearney
+- **Category:** AI prompts, ChatGPT, free traffic, PLR
+- **Assess:** Another Larry Kearney PLR prompt pack. "Unlimited free traffic" is standard W+ hype language. 600 prompts is quantity over quality. Same assessment as his KDP pack — only if your audience specifically buys prompt PLR. 3 days out, short notice.
 
 ---
 
-## Notes
-- ClickBank Blog: 403 error (feed blocked)
-- JVZoo Blog: 301 redirect (feed moved, needs URL update)
-- WarriorPlus Blog: no feed configured (scraping not set up)
-- MunchEye: working perfectly, 20 articles per scan
+## TOP PICKS (ranked)
 
-## Pending Fixes
-- Update JVZoo Blog feed URL (currently 301 redirecting)
-- Check if ClickBank Blog feed is accessible or needs auth
-- Optionally set up HTML scraper for WarriorPlus Blog
+1. **Jamie Lewis – SNAPBUILDS (Jul 2, JVZoo)** — Top vendor, long runway, JVZoo means good commissions. Clear #1 to track.
+2. **Jamie Lewis – Arsenal Stack (Jul 13, W+)** — Same vendor, bundle product. Watch both.
+3. **Dawn Vu – Local Template Store Fortune (Jun 2, W+)** — Solid local marketing niche, known vendor, 6 days out.
+4. **HuntingAlice – AI Lead Hunter (May 31, JVZoo)** — Riskiest pick but highest potential if the software is real. JVZoo AI lead gen is an underserved niche.
 
----
+## FIXES NEEDED
+- JVZoo Blog feed returns 301. The URL probably changed. Need to find the new RSS endpoint and re-add.
+- WarriorPlus Blog has no feed/scraper configured. Need to add explicit feed URL or fallback scraper.
+- ClickBank Blog returns 403. Might be blocking automated fetchers. Try with a User-Agent header or find alternative feed.
 
-Last scan: 2026-05-25 07:00 ET (cron)
-Next scan: 2026-05-26 07:00 ET (cron)

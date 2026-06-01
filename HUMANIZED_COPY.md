@@ -147,6 +147,29 @@ Built for people who are tired of guessing what to learn next.
 
 ---
 
+## 15. CAC Killer — $149
+
+A founder I know burned $50K on Google Ads in three months and got 12 customers. His LTV was $240. That's a $4,166 CAC on a $240 customer. He didn't know his numbers until I ran them for him.
+
+CAC Killer takes your ad spend, customer count, revenue, and margin — then tells you exactly which channels to kill, optimize, or scale. It calculates LTV:CAC per channel. Flags unattributed spend. Shows you the dollar amount you're burning every month on ads that don't convert.
+
+Seven steps. Not a calculator — a full CAC audit you'd pay $5K-15K for:
+1. **CAC/LTV Health Check** — your CAC, LTV, LTV:CAC ratio, payback period, and monthly unit profit. Instant verdict: CRITICAL, WARNING, HEALTHY, or UNDER-SPENDING.
+2. **Channel Attribution** — per-channel CAC, KILL/OPTIMIZE/SCALE tags, unattributed spend detection.
+3. **Waste Finder** — monthly + annual dollar waste, breakdown by channel, 60-day fix plan with specific actions.
+4. **Industry Benchmarks** — 8 industries with real data (SaaS, e-commerce, agency, healthtech, fintech, edtech, marketplace, D2C). See your tier, payback period, churn rates, NRR, and CPL benchmarks.
+5. **Scenario Simulator + ROI Calculator** — "What if I cut Google Ads 50% and double LinkedIn?" See projected 12-month P&L before you touch budget. Plus ROI calculator (286x is common).
+6. **Loaded CAC Calculator** — the real cost of acquisition. Add salaries, tools, creative, agency fees, analytics. Most founders discover their true CAC is 2-4x higher than blended. This is the number that kills companies.
+7. **CAC Playbook** — personalized 4-week kill plan based on your data. Quick-win checklist prioritized HIGH/MED/LOW. Full audit summary with every metric in one place. Plus one-click PDF export for your CFO.
+
+New in v3: **Progress auto-saves** — your data persists across sessions. **Click any step in the progress bar** to jump between sections. **Share audit links** — encode your data in URLs. **Start Over** button resets everything. **Print-ready PDF export** includes loaded CAC, playbook, and full breakdown. **Responsive** — works on mobile.
+
+Consultants charge $5K-15K for this. CAC Killer does it in 5 minutes for $149.
+
+For anyone running paid acquisition who can't tell which half of their ad budget is wasted — this tells you.
+
+---
+
 ## POSTING GUIDE
 
 Each listing above is:
