@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OutageCalc — SLA Penalty & Downtime Cost Calculator</title>
+<style>
+:root {--bg: #0a0e15; --surface: #111827; --border: #1f2937; --text: #e5e7eb; --text-secondary: #9ca3af; --accent: #ef4444; --green: #10b981; --amber: #f59e0b; --radius: 12px; --font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;}
+* {box-sizing: border-box; margin: 0; padding: 0;}
+body {font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6;}
+.container {max-width: 900px; margin: 0 auto; padding: 20px;}
+
+header {text-align: center; padding: 40px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px;}
+h1 {font-size: clamp(1.6rem, 4vw, 2rem); font-weight: 800; letter-spacing: -0.02em;}
+h1 span {color: var(--accent);}
+.sub {color: var(--text-secondary); font-size: 0.92rem; margin-top: 8px;}
+
+/* Input cards */
+.card {background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px;}
+.card h3 {font-size: 0.92rem; font-weight: 700; margin-bottom: 16px; color: var(--accent); display: flex; align-items: center; gap: 8px;}
+.card h3 .emoji {font-size: 1.3rem;}
+
+.form-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;}
+.field label {display: block; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;}
+.field input, .field select {width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; font-family: var(--font);}
+.field input:focus, .field select:focus {outline: none; border-color: var(--accent);}
+.field .hint {font-size: 0.62rem; color: var(--text-muted); margin-top: 4px;}
+
+/* Results */
+.results {display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px;}
+.result-box {background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center;}
+.result-box .label {font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;}
+.result-box .value {font-size: 1.6rem; font-weight: 800;}
+.result-box .value.red {color: var(--accent);}
+.result-box .value.green {color: var(--green);}
+.result-box .value.amber {color: var(--amber);}
+.result-box .sub-val {font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;}
+
+.verdict {background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center;}
+.verdict .status-icon {width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;}
+.verdict .status-icon.ok {background: rgba(16,185,129,0.15);}
+.verdict .status-icon.warn {background: rgba(245,158,11,0.15);}
+.verdict .status-icon.bad {background: rgba(239,68,68,0.15);}
+.verdict h4 {font-size: 0.95rem; margin-bottom: 4px;}
+.verdict p {font-size: 0.82rem; color: var(--text-secondary);}
+
+/* Breakdown table */
+.breakdown-table {width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 24px;}
+.breakdown-table th {text-align: left; color: var(--text-muted); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 12px; border-bottom: 2px solid var(--border);}
+.breakdown-table td {padding: 10px 12px; border-bottom: 1px solid var(--border);}
+.breakdown-table tr:last-child td {font-weight: 700; color: var(--accent); border-top: 2px solid var(--accent);}
+
+/* Scenario slider */
+.scenarios {margin-bottom: 24px;}
+.scenarios h3 {font-size: 0.88rem; font-weight: 700; margin-bottom: 14px;}
+.scenario-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;}
+.scenario-btn {background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; text-align: left; transition: all 0.15s; font-family: var(--font); color: var(--text); font-size: 0.78rem;}
+.scenario-btn:hover {border-color: var(--accent);}
+.scenario-btn .s-title {font-weight: 700; display: block; margin-bottom: 4px;}
+.scenario-btn .s-cost {font-size: 1.2rem; font-weight: 800; color: var(--accent);}
+
+/* CTA */
+.cta {text-align: center; padding: 24px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius); margin-bottom: 32px;}
+.cta h3 {font-size: 1rem; margin-bottom: 8px;}
+.cta p {font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 16px;}
+.btn {display: inline-block; padding: 12px 28px; border-radius: 100px; font-size: 0.9rem; font-weight: 700; text-decoration: none; cursor: pointer; transition: all 0.2s; font-family: var(--font); border: none;}
+.btn-primary {background: var(--accent); color: #fff;}
+.btn-primary:hover {transform: translateY(-2px); box-shadow: 0 6px 24px rgba(239,68,68,0.35);}
+.btn-outline {background: transparent; border: 1px solid var(--border); color: var(--text); margin-left: 8px;}
+.steps {display: flex; gap: 12px; align-items: center; justify-content: center; margin-bottom: 16px; flex-wrap: wrap;}
+.step-label {font-size: 0.65rem; color: var(--text-muted);}
+
+/* Toast */
+.toast {position: fixed; bottom: 20px; right: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; font-size: 0.82rem; opacity: 0; transition: opacity 0.3s; z-index: 100;}
+.toast.show {opacity: 1;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Outage<span>Calc</span></h1>
+  <p class="sub">Every minute of downtime has a price tag. Calculate yours before it happens.</p>
+</header>
+
+<!-- Step 1: Company Profile -->
+<div class="card" id="step1">
+  <h3><span class="emoji">🏢</span> Your Company Profile</h3>
+  <div class="form-grid">
+    <div class="field">
+      <label>Annual Revenue ($)</label>
+      <input type="number" id="revenue" value="5000000" oninput="recalc()" placeholder="5,000,000">
+      <div class="hint">Your MRR × 12 or actual annual</div>
+    </div>
+    <div class="field">
+      <label>Monthly Active Users</label>
+      <input type="number" id="users" value="15000" oninput="recalc()" placeholder="15,000">
+    </div>
+    <div class="field">
+      <label>SLA Tier</label>
+      <select id="slaTier" onchange="recalc()">
+        <option value="99.9">99.9% (Three Nines)</option>
+        <option value="99.95">99.95%</option>
+        <option value="99.99">99.99% (Four Nines)</option>
+        <option value="99.999" selected>99.999% (Five Nines)</option>
+      </select>
+      <div class="hint">Contractual uptime promise</div>
+    </div>
+    <div class="field">
+      <label>SLA Penalty % per Hour</label>
+      <input type="number" id="penaltyPct" value="5" min="1" max="100" oninput="recalc()" placeholder="5">
+      <div class="hint">% of monthly fee credited per downtime hour</div>
+    </div>
+    <div class="field">
+      <label>Revenue per Hour ($)</label>
+      <input type="number" id="revPerHr" value="571" oninput="recalcFromRPH()" placeholder="571">
+      <div class="hint">Annual revenue ÷ 8760 hrs</div>
+    </div>
+    <div class="field">
+      <label>Avg Customer Value ($/yr)</label>
+      <input type="number" id="avgCustVal" value="1200" oninput="recalc()" placeholder="1200">
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Outage Scenario -->
+<div class="card" id="step2">
+  <h3><span class="emoji">⚠️</span> Outage Details</h3>
+  <div class="form-grid">
+    <div class="field">
+      <label>Duration (minutes)</label>
+      <input type="number" id="duration" value="180" oninput="recalc()" placeholder="180">
+      <div class="hint">How long was the outage?</div>
+    </div>
+    <div class="field">
+      <label>% of Users Affected</label>
+      <input type="number" id="affectedPct" value="65" min="1" max="100" oninput="recalc()" placeholder="65">
+    </div>
+    <div class="field">
+      <label>Peak Hours?</label>
+      <select id="peakHours" onchange="recalc()">
+        <option value="no">No — off-peak</option>
+        <option value="yes" selected>Yes — peak business hours</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Data Loss?</label>
+      <select id="dataLoss" onchange="recalc()">
+        <option value="none">None</option>
+        <option value="minor">Minor (recoverable)</option>
+        <option value="major" selected>Major (permanent)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Additional Costs -->
+<div class="card" id="step3">
+  <h3><span class="emoji">💰</span> Hidden Costs</h3>
+  <div class="form-grid">
+    <div class="field">
+      <label>Engineering Hours to Fix</label>
+      <input type="number" id="engHours" value="12" oninput="recalc()" placeholder="12">
+      <div class="hint">Total eng hours across team</div>
+    </div>
+    <div class="field">
+      <label>Avg Eng Hourly ($)</label>
+      <input type="number" id="engRate" value="85" oninput="recalc()" placeholder="85">
+    </div>
+    <div class="field">
+      <label>Support Tickets Generated</label>
+      <input type="number" id="tickets" value="45" oninput="recalc()" placeholder="45">
+    </div>
+    <div class="field">
+      <label>Cost Per Ticket ($)</label>
+      <input type="number" id="ticketCost" value="22" oninput="recalc()" placeholder="22">
+    </div>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="verdict" id="verdictBox">
+  <div class="status-icon bad" id="verdictIcon">💀</div>
+  <div>
+    <h4 id="verdictTitle">Critical Financial Exposure</h4>
+    <p id="verdictText">Your outage cost exceeds typical SLA penalties by 3-8x. Your SLA contract likely under-protects you.</p>
+  </div>
+</div>
+
+<div class="results" id="resultsGrid"></div>
+
+<table class="breakdown-table" id="breakdownTable">
+<thead><tr><th>Cost Category</th><th>Amount</th><th>% of Total</th></tr></thead>
+<tbody id="breakdownBody"></tbody>
+</table>
+
+<!-- Scenarios -->
+<div class="scenarios">
+  <h3>Quick Scenarios — Click to Load</h3>
+  <div class="scenario-grid" id="scenarioGrid"></div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h3>Want the PDF Report + Monthly Audit?</h3>
+  <p>Pro version exports a board-ready report with SLA penalty projections, incident timeline, and a 90-day prevention playbook.</p>
+  <div class="steps">
+    <span class="step-label">Pro: $99 one-time</span>
+  </div>
+  <button class="btn btn-primary" onclick="exportReport()">Export Text Report</button>
+  <button class="btn btn-outline" onclick="resetAll()">↻ Reset</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+</div>
+
+<script>
+const scenarios = [
+  {title: "Startup Outage", s_title: "2hr outage, 10K users", s_cost: "$8,400", rev: 2000000, users: 10000, sla: "99.9", penalty: 10, dur: 120, affected: 80, peak: "yes", dl: "minor", eng: 6, engr: 75, tix: 20, tcost: 25},
+  {title: "SaaS Mid-Market", s_title: "3hr outage, 50K users", s_cost: "$42,750", rev: 10000000, users: 50000, sla: "99.99", penalty: 5, dur: 180, affected: 60, peak: "yes", dl: "none", eng: 16, engr: 95, tix: 120, tcost: 18},
+  {title: "Enterprise Platform", s_title: "6hr outage, 500K users", s_cost: "$287,000", rev: 50000000, users: 500000, sla: "99.999", penalty: 5, dur: 360, affected: 40, peak: "yes", dl: "major", eng: 48, engr: 120, tix: 850, tcost: 15},
+  {title: "E-Com Black Friday", s_title: "1hr outage, peak season", s_cost: "$156,000", rev: 30000000, users: 200000, sla: "99.95", penalty: 2, dur: 60, affected: 100, peak: "yes", dl: "minor", eng: 20, engr: 100, tix: 300, tcost: 20},
+  {title: "Fintech Breach", s_title: "4hr outage + data loss", s_cost: "$1,200,000", rev: 80000000, users: 1000000, sla: "99.999", penalty: 10, dur: 240, affected: 25, peak: "yes", dl: "major", eng: 80, engr: 130, tix: 2000, tcost: 25},
+];
+
+function loadScenario(idx) {
+  const s = scenarios[idx];
+  document.getElementById('revenue').value = s.rev;
+  document.getElementById('users').value = s.users;
+  document.getElementById('slaTier').value = s.sla;
+  document.getElementById('penaltyPct').value = s.penalty;
+  document.getElementById('duration').value = s.dur;
+  document.getElementById('affectedPct').value = s.affected;
+  document.getElementById('peakHours').value = s.peak;
+  document.getElementById('dataLoss').value = s.dl;
+  document.getElementById('engHours').value = s.eng;
+  document.getElementById('engRate').value = s.engr;
+  document.getElementById('tickets').value = s.tix;
+  document.getElementById('ticketCost').value = s.tcost;
+  recalc();
+}
+
+function recalcFromRPH() {
+  const rph = parseFloat(document.getElementById('revPerHr').value) || 571;
+  document.getElementById('revenue').value = Math.round(rph * 8760);
+  recalc();
+}
+
+function recalc() {
+  const rev = parseFloat(document.getElementById('revenue').value) || 5000000;
+  const users = parseFloat(document.getElementById('users').value) || 15000;
+  const sla = document.getElementById('slaTier').value;
+  const penaltyPct = parseFloat(document.getElementById('penaltyPct').value) || 5;
+  const duration = parseFloat(document.getElementById('duration').value) || 180;
+  const affectedPct = parseFloat(document.getElementById('affectedPct').value) || 65;
+  const peak = document.getElementById('peakHours').value;
+  const dl = document.getElementById('dataLoss').value;
+  const engHours = parseFloat(document.getElementById('engHours').value) || 12;
+  const engRate = parseFloat(document.getElementById('engRate').value) || 85;
+  const tickets = parseFloat(document.getElementById('tickets').value) || 45;
+  const ticketCost = parseFloat(document.getElementById('ticketCost').value) || 22;
+  
+  const revPerHr = rev / 8760;
+  document.getElementById('revPerHr').value = Math.round(revPerHr);
+  
+  // Direct revenue loss
+  const hoursOut = duration / 60;
+  const revLost = revPerHr * hoursOut * (affectedPct / 100);
+  
+  // Peak multiplier
+  const peakMultiplier = peak === 'yes' ? 1.5 : 1.0;
+  const adjustedRevLost = revLost * peakMultiplier;
+  
+  // SLA penalty
+  const monthlyFee = rev / 12;
+  const slaPenalty = monthlyFee * (penaltyPct / 100) * hoursOut;
+  
+  // SLA annual tolerance
+  const slas = { "99.9": 525.6, "99.95": 262.8, "99.99": 52.56, "99.999": 5.256 };
+  const annualMinutes = slas[sla] || 5.256;
+  const overSla = duration > annualMinutes ? duration - annualMinutes : 0;
+  
+  // Churn impact
+  const churnRate = (affectedPct / 100) * (dl === 'major' ? 0.03 : dl === 'minor' ? 0.01 : 0.005);
+  const avgCustVal = parseFloat(document.getElementById('avgCustVal').value) || 1200;
+  const churnCost = users * churnRate * avgCustVal;
+  
+  // Engineering cost
+  const engCost = engHours * engRate;
+  
+  // Support cost
+  const supportCost = tickets * ticketCost;
+  
+  // Reputation/PR (estimated)
+  const reputationCost = dl === 'major' ? adjustedRevLost * 0.5 : adjustedRevLost * 0.1;
+  
+  const totalCost = adjustedRevLost + slaPenalty + churnCost + engCost + supportCost + reputationCost;
+  
+  // Update results
+  const fmt = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+  
+  document.getElementById('resultsGrid').innerHTML = `
+    <div class="result-box"><div class="label">Revenue Lost</div><div class="value red">${fmt(adjustedRevLost)}</div><div class="sub-val">${hoursOut}h × $${Math.round(revPerHr)}/hr at ${affectedPct}%</div></div>
+    <div class="result-box"><div class="label">SLA Penalty Owed</div><div class="value amber">${fmt(slaPenalty)}</div><div class="sub-val">${penaltyPct}% of monthly fee × ${hoursOut}h</div></div>
+    <div class="result-box"><div class="label">Customer Churn</div><div class="value red">${fmt(churnCost)}</div><div class="sub-val">${(churnRate*100).toFixed(1)}% churn × ${users.toLocaleString()} users</div></div>
+    <div class="result-box"><div class="label">Engineering Cost</div><div class="value">${fmt(engCost)}</div><div class="sub-val">${engHours} hrs @ $${engRate}/hr</div></div>
+    <div class="result-box"><div class="label">Support Cost</div><div class="value">${fmt(supportCost)}</div><div class="sub-val">${tickets} tickets × $${ticketCost}/ticket</div></div>
+    <div class="result-box"><div class="label">TOTAL COST</div><div class="value red" style="font-size:2rem">${fmt(totalCost)}</div><div class="sub-val">${overSla > 0 ? 'Exceeds SLA by ' + Math.round(overSla) + ' minutes' : 'Within SLA tolerance'}</div></div>
+  `;
+  
+  document.getElementById('breakdownBody').innerHTML = `
+    <tr><td>Direct Revenue Loss${peak==='yes'?' (peak ×1.5)':''}</td><td>${fmt(adjustedRevLost)}</td><td>${(adjustedRevLost/totalCost*100).toFixed(1)}%</td></tr>
+    <tr><td>SLA Penalty</td><td>${fmt(slaPenalty)}</td><td>${(slaPenalty/totalCost*100).toFixed(1)}%</td></tr>
+    <tr><td>Customer Churn</td><td>${fmt(churnCost)}</td><td>${(churnCost/totalCost*100).toFixed(1)}%</td></tr>
+    <tr><td>Engineering Response</td><td>${fmt(engCost)}</td><td>${(engCost/totalCost*100).toFixed(1)}%</td></tr>
+    <tr><td>Support Overhead</td><td>${fmt(supportCost)}</td><td>${(supportCost/totalCost*100).toFixed(1)}%</td></tr>
+    <tr><td>Reputation Impact</td><td>${fmt(reputationCost)}</td><td>${(reputationCost/totalCost*100).toFixed(1)}%</td></tr>
+    <tr><td>GRAND TOTAL</td><td>${fmt(totalCost)}</td><td>100%</td></tr>
+  `;
+  
+  // Verdict
+  const icon = document.getElementById('verdictIcon');
+  const title = document.getElementById('verdictTitle');
+  const text = document.getElementById('verdictText');
+  const box = document.getElementById('verdictBox');
+  
+  if (totalCost > 100000) {
+    icon.textContent = '💀'; icon.className = 'status-icon bad';
+    box.style.borderColor = 'rgba(239,68,68,0.4)';
+    title.textContent = 'Critical Financial Exposure';
+    text.textContent = `This outage would cost ${fmt(totalCost)}. Your SLA penalties cover only ${fmt(slaPenalty)} — that's a ${((1-slaPenalty/totalCost)*100).toFixed(0)}% gap. Review your insurance.`;
+  } else if (totalCost > 25000) {
+    icon.textContent = '⚠️'; icon.className = 'status-icon warn';
+    box.style.borderColor = 'rgba(245,158,11,0.4)';
+    title.textContent = 'Significant Financial Impact';
+    text.textContent = `${fmt(totalCost)} in total costs. Customer churn (${fmt(churnCost)}) may exceed SLA penalties. Prevention investment justified.`;
+  } else {
+    icon.textContent = '✅'; icon.className = 'status-icon ok';
+    box.style.borderColor = 'rgba(16,185,129,0.4)';
+    title.textContent = 'Manageable Exposure';
+    text.textContent = `${fmt(totalCost)} is below critical threshold. Still, every outage erodes trust. Monitor your uptime aggressively.`;
+  }
+}
+
+function exportReport() {
+  const lines = [];
+  lines.push('OUTAGECALC — SLA PENALTY & DOWNTIME COST REPORT');
+  lines.push('='.repeat(50));
+  lines.push(`Generated: ${new Date().toLocaleString()}`);
+  lines.push('');
+  lines.push('COMPANY PROFILE');
+  lines.push('-'.repeat(40));
+  lines.push(`Annual Revenue: $${parseFloat(document.getElementById('revenue').value).toLocaleString()}`);
+  lines.push(`Monthly Users: ${parseFloat(document.getElementById('users').value).toLocaleString()}`);
+  lines.push(`SLA Tier: ${document.getElementById('slaTier').value}%`);
+  lines.push('');
+  
+  const rows = document.getElementById('breakdownBody').querySelectorAll('tr');
+  lines.push('COST BREAKDOWN');
+  lines.push('-'.repeat(40));
+  rows.forEach(r => {
+    const cells = r.querySelectorAll('td');
+    if (cells.length >= 2) {
+      lines.push(`${cells[0].textContent.padEnd(30)} ${cells[1].textContent}`);
+    }
+  });
+  
+  const blob = new Blob([lines.join('\n')], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'outagecalc-report.txt';
+  a.click();
+  
+  const toast = document.getElementById('toast');
+  toast.textContent = 'Report exported — ready for your board meeting';
+  toast.className = 'toast show';
+  setTimeout(() => toast.className = 'toast', 2500);
+}
+
+function resetAll() {
+  if (!confirm('Reset all data to defaults?')) return;
+  document.getElementById('revenue').value = 5000000;
+  document.getElementById('users').value = 15000;
+  document.getElementById('slaTier').value = '99.999';
+  document.getElementById('penaltyPct').value = 5;
+  document.getElementById('duration').value = 180;
+  document.getElementById('affectedPct').value = 65;
+  document.getElementById('peakHours').value = 'yes';
+  document.getElementById('dataLoss').value = 'major';
+  document.getElementById('engHours').value = 12;
+  document.getElementById('engRate').value = 85;
+  document.getElementById('tickets').value = 45;
+  document.getElementById('ticketCost').value = 22;
+  document.getElementById('avgCustVal').value = 1200;
+  recalc();
+  const toast = document.getElementById('toast');
+  toast.textContent = 'Reset to default scenario';
+  toast.className = 'toast show';
+  setTimeout(() => toast.className = 'toast', 2000);
+}
+
+// Build scenarios
+(function() {
+  const grid = document.getElementById('scenarioGrid');
+  scenarios.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'scenario-btn';
+    btn.innerHTML = `<span class="s-title">${s.title}</span><span class="s-cost">${s.s_cost}</span>`;
+    btn.onclick = () => loadScenario(i);
+    grid.appendChild(btn);
+  });
+  recalc();
+})();
+</script>
+</body>
+</html>
